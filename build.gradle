@@ -1,0 +1,65 @@
+buildscript {
+    ext.kotlin_version = '1.2.71'
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+def versions = [
+        supportLibs: '28.0.0',
+        okhttp     : '3.11.0',
+        retrofit   : '2.4.0',
+        jackson    : '2.9.7',
+        dagger     : '2.16'
+]
+
+ext.libraries = [
+        // kotlin
+        kotlin             : 'org.jetbrains.kotlin:kotlin-stdlib:' + kotlin_version,
+
+        // support libraries
+        appCompat          : 'com.android.support:appcompat-v7:' + versions.supportLibs,
+        design             : 'com.android.support:design:' + versions.supportLibs,
+        recyclerView       : 'com.android.support:recyclerview-v7:' + versions.supportLibs,
+
+        // jackson libraries
+        jackson            : 'com.fasterxml.jackson.core:jackson-databind:' + versions.jackson,
+        jacksonKotlin      : 'com.fasterxml.jackson.module:jackson-module-kotlin:' + versions.jackson,
+
+        // internet libraries
+        okhttp             : 'com.squareup.okhttp3:okhttp:' + versions.okhttp,
+        okhttpLogging      : 'com.squareup.okhttp3:logging-interceptor:' + versions.okhttp,
+        okhttpUrlConnection: 'com.squareup.okhttp3:okhttp-urlconnection:' + versions.okhttp,
+        retrofit           : 'com.squareup.retrofit2:retrofit:' + versions.retrofit,
+        retrofitRxJava2    : 'com.squareup.retrofit2:adapter-rxjava2:' + versions.retrofit,
+        retrofitJackson    : 'com.squareup.retrofit2:converter-jackson:' + versions.retrofit,
+
+        // rx libraries
+        rxPM               : 'me.dmdev.rxpm:rxpm:1.2.3',
+
+        // dagger
+        dagger             : 'com.google.dagger:dagger:' + versions.dagger,
+        daggerProcessor    : 'com.google.dagger:dagger-compiler:' + versions.dagger,
+
+        // test libraries
+        junit              : 'junit:junit:4.12',
+        testRunner         : 'com.android.support.test:runner:1.0.2',
+        espresso           : 'com.android.support.test.espresso:espresso-core:3.0.2'
+]
+
