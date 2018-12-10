@@ -2,17 +2,20 @@ package io.samborskii.nusbus.ui.main
 
 import android.os.Bundle
 import android.util.Log
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.samborskii.nusbus.NusBusApplication
 import io.samborskii.nusbus.R
-import io.samborskii.nusbus.api.impl.NusBusClientImpl
+import io.samborskii.nusbus.api.NusBusClient
 import me.dmdev.rxpm.base.PmSupportActivity
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
+import javax.inject.Inject
 
 class MainActivity : PmSupportActivity<MainPresentationModel>() {
 
+    @Inject
+    lateinit var client: NusBusClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        NusBusApplication.getComponent(this).inject(this)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
     }
@@ -23,15 +26,5 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
         pm.errorMessage.observable bindTo { Log.e("TEST", it) }
     }
 
-    override fun providePresentationModel(): MainPresentationModel {
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .build()
-        val mapper = jacksonObjectMapper()
-
-        val client = NusBusClientImpl(okHttpClient, mapper)
-        return MainPresentationModel(client)
-    }
+    override fun providePresentationModel(): MainPresentationModel = MainPresentationModel(client)
 }

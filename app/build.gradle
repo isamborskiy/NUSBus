@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 28
@@ -10,6 +12,9 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+
+        multiDexEnabled true
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,6 +40,8 @@ dependencies {
     implementation libraries.kotlin
 
     implementation libraries.appCompat
+    implementation libraries.design
+    implementation libraries.recyclerView
 
     implementation libraries.jackson
     implementation libraries.jacksonKotlin
@@ -47,6 +54,9 @@ dependencies {
     implementation libraries.retrofitJackson
 
     implementation libraries.rxPM
+
+    kapt libraries.daggerProcessor
+    implementation libraries.dagger
 
     testImplementation libraries.junit
     androidTestImplementation libraries.testRunner

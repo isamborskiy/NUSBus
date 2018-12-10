@@ -11,8 +11,8 @@ data class BusStopsResult(@JsonProperty("busstops") val busStops: List<BusStop>)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BusStop(
-    @JsonProperty("caption") val caption: String,
     @JsonProperty("name") val name: String,
+    @JsonProperty("caption") val caption: String,
     @JsonProperty("latitude") val latitude: Double,
     @JsonProperty("longitude") val longitude: Double
 )
