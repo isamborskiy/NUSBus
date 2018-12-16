@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="default_padding">16dp</dimen>
+    <dimen name="default_half_padding">8dp</dimen>
+
+    <!-- status bar height -->
+    <dimen name="bus_stop_header_top_padding">0dp</dimen>
+    <dimen name="bus_stop_header_height">96dp</dimen>
+    <dimen name="bus_stop_list_item_height">48dp</dimen>
+    <dimen name="shuttle_list_item_height">48dp</dimen>
+
+    <dimen name="shadow_height">2dp</dimen>
+</resources>

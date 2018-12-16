@@ -43,6 +43,8 @@ dependencies {
     implementation libraries.design
     implementation libraries.recyclerView
 
+    implementation(libraries.advRecyclerView) { transitive = true }
+
     implementation libraries.jackson
     implementation libraries.jacksonKotlin
 

@@ -39,6 +39,9 @@ ext.libraries = [
         design             : 'com.android.support:design:' + versions.supportLibs,
         recyclerView       : 'com.android.support:recyclerview-v7:' + versions.supportLibs,
 
+        // UI elements
+        advRecyclerView    : 'com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.11.0@aar',
+
         // jackson libraries
         jackson            : 'com.fasterxml.jackson.core:jackson-databind:' + versions.jackson,
         jacksonKotlin      : 'com.fasterxml.jackson.module:jackson-module-kotlin:' + versions.jackson,

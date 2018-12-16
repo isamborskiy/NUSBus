@@ -20,7 +20,7 @@ class MainPresentationModel(private val apiClient: NusBusClient) : PresentationM
         super.onCreate()
 
         refreshAction.observable
-            .flatMapSingle {
+            .flatMapSingle { _ ->
                 apiClient.busStops()
                     .subscribeOn(Schedulers.io())
                     .map { response -> response.busStopsResult.busStops }
