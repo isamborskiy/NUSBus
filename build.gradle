@@ -27,7 +27,8 @@ def versions = [
         okhttp     : '3.11.0',
         retrofit   : '2.4.0',
         jackson    : '2.9.7',
-        dagger     : '2.19'
+        dagger     : '2.19',
+        rxBinding2 : '2.2.0'
 ]
 
 ext.libraries = [
@@ -56,6 +57,8 @@ ext.libraries = [
 
         // rx libraries
         rxPM               : 'me.dmdev.rxpm:rxpm:1.2.3',
+//        rxBinding2Kotlin      : 'com.jakewharton.rxbinding2:rxbinding-kotlin:' + versions.rxBinding2,
+//        rxBinding2RecyclerView: 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:' + versions.rxBinding2,
 
         // dagger
         dagger             : 'com.google.dagger:dagger:' + versions.dagger,

@@ -1,13 +1,15 @@
 package io.samborskii.nusbus.ui.main
 
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.SimpleItemAnimator
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.h6ah4i.android.widget.advrecyclerview.expandable.RecyclerViewExpandableItemManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractExpandableItemAdapter
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import io.samborskii.nusbus.NusBusApplication
 import io.samborskii.nusbus.R
 import io.samborskii.nusbus.api.NusBusClient
@@ -48,23 +50,39 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
     }
 
     override fun onBindPresentationModel(pm: MainPresentationModel) {
-        pm.data.observable bindTo { adapter.updateBusStops(it) }
+        pm.busStopsData.observable bindTo { adapter.updateBusStops(it) }
+        pm.shuttleServiceData.observable bindTo { adapter.updateBusStopShuttles(it.name, it.shuttles) }
 
-        pm.errorMessage.observable bindTo { Log.e("TEST", it) }
+        pm.errorMessage.observable bindTo { Snackbar.make(bus_stops_layout, it, Snackbar.LENGTH_SHORT).show() }
+
+        adapter.getOnGroupItemClickObservable() bindTo pm.loadShuttleService.consumer
     }
 
     override fun providePresentationModel(): MainPresentationModel = MainPresentationModel(client)
 
     internal class BusStopsAdapter : AbstractExpandableItemAdapter<BusStopGroupViewHolder, ShuttleViewHolder>() {
 
-        private val items: MutableList<BusStopData> = arrayListOf()
+        private val items = mutableListOf<BusStopData>()
+        private val groupItemClickSubject = PublishSubject.create<String>()
+
+        private val loadShuttlesCallback: (String) -> Unit = { groupItemClickSubject.onNext(it) }
+
+        fun getOnGroupItemClickObservable(): Observable<String> = groupItemClickSubject
 
         fun updateBusStops(busStops: List<BusStop>) {
-            val shuttles = mutableListOf(
-                Shuttle("A1", "-", "-", "-", "-"),
-                Shuttle("D1", "-", "-", "-", "-")
-            )
-            items += busStops.map { BusStopData(it, shuttles) }
+            items.clear()
+
+            items += busStops.map { BusStopData(it) }
+            notifyDataSetChanged()
+        }
+
+        fun updateBusStopShuttles(busStopName: String, shuttles: List<Shuttle>) {
+            val busStopIndex = items.indexOfFirst { it.busStop.name == busStopName }
+            if (busStopIndex == -1) return
+
+            val busStopData = items[busStopIndex]
+            busStopData.shuttles.clear()
+            busStopData.shuttles += shuttles
             notifyDataSetChanged()
         }
 
@@ -75,8 +93,7 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
 
         override fun getGroupId(groupPosition: Int): Long = groupPosition.toLong()
 
-        override fun getChildId(groupPosition: Int, childPosition: Int): Long =
-            items[groupPosition].shuttles[childPosition].name.hashCode().toLong()
+        override fun getChildId(groupPosition: Int, childPosition: Int): Long = childPosition.toLong()
 
         override fun getGroupItemViewType(groupPosition: Int): Int =
             if (groupPosition == 0) HEADER_VIEW_TYPE else BUS_STOP_VIEW_TYPE
@@ -102,7 +119,7 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
 
         override fun onBindGroupViewHolder(holder: BusStopGroupViewHolder, groupPosition: Int, viewType: Int) {
             if (holder is BusStopViewHolder) {
-                holder.bind(items[groupPosition - 1])
+                holder.bind(items[groupPosition - 1], loadShuttlesCallback)
             }
         }
 

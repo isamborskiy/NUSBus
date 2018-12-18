@@ -5,6 +5,6 @@ import io.samborskii.nusbus.model.Shuttle
 
 data class BusStopData(
     val busStop: BusStop,
-    val shuttles: MutableList<Shuttle> = arrayListOf(),
+    val shuttles: MutableList<Shuttle> = mutableListOf(),
     var expanded: Boolean = false
 )

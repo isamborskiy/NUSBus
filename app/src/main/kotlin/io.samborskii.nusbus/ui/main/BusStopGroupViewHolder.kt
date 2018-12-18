@@ -25,9 +25,9 @@ class BusStopViewHolder(itemView: View) : BusStopGroupViewHolder(itemView) {
 
     private var animator: ObjectAnimator? = null
 
-    fun bind(data: BusStopData) {
+    fun bind(data: BusStopData, loadShuttlesCallback: (String) -> Unit) {
         itemView.bus_stop_name.text = data.busStop.caption
-
+        itemView.bus_stop_layout.setOnClickListener { if (data.expanded) loadShuttlesCallback(data.busStop.name) }
         if (this.busStopData !== data) {
             animator?.cancel()
             itemView.arrow.rotation = rotation(data.expanded)
@@ -42,7 +42,7 @@ class BusStopViewHolder(itemView: View) : BusStopGroupViewHolder(itemView) {
         this.expanded = data.expanded
     }
 
-    override fun isExpandable(): Boolean  = true
+    override fun isExpandable(): Boolean = true
 
     private fun rotation(expanded: Boolean): Float = if (expanded) ROTATION_EXPANDED else ROTATION_COLLAPSED
 }

@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.reactivex.Single
 import io.samborskii.nusbus.api.NusBusApi
 import io.samborskii.nusbus.api.NusBusClient
-import io.samborskii.nusbus.model.BusStopsResponse
+import io.samborskii.nusbus.model.BusStop
+import io.samborskii.nusbus.model.ShuttleService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -20,5 +21,9 @@ class NusBusClientImpl(hostUrl: String, okHttpClient: OkHttpClient, mapper: Obje
         .build()
         .create(NusBusApi::class.java)
 
-    override fun busStops(): Single<BusStopsResponse> = api.busStops()
+    override fun busStops(): Single<List<BusStop>> = api.busStops()
+        .map { it.busStopsResult.busStops }
+
+    override fun shuttleService(busStopName: String): Single<ShuttleService> = api.shuttleService(busStopName)
+        .map { it.shuttleService }
 }
