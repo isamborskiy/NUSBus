@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.SimpleItemAnimator
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.h6ah4i.android.widget.advrecyclerview.expandable.RecyclerViewExpandableItemManager
@@ -17,8 +18,11 @@ import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.Shuttle
 import kotlinx.android.synthetic.main.activity_main.*
 import me.dmdev.rxpm.base.PmSupportActivity
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+
+private const val REFRESH_TIME_IN_SECONDS = 15L
 
 class MainActivity : PmSupportActivity<MainPresentationModel>() {
 
@@ -38,9 +42,10 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
 
     private fun setAdapter(): BusStopsAdapter {
         val expMgr = RecyclerViewExpandableItemManager(null)
-        val adapter = BusStopsAdapter().apply { setHasStableIds(true) }
+        val layoutManager = LinearLayoutManager(this)
+        val adapter = BusStopsAdapter(layoutManager).apply { setHasStableIds(true) }
 
-        recycler_view.layoutManager = LinearLayoutManager(this)
+        recycler_view.layoutManager = layoutManager
         recycler_view.adapter = expMgr.createWrappedAdapter(adapter)
 
         (recycler_view.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
@@ -56,24 +61,40 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
         pm.errorMessage.observable bindTo { Snackbar.make(bus_stops_layout, it, Snackbar.LENGTH_SHORT).show() }
 
         adapter.getOnGroupItemClickObservable() bindTo pm.loadShuttleService.consumer
+        adapter.getExpandedItemsObservable() bindTo pm.loadShuttleService.consumer
     }
 
     override fun providePresentationModel(): MainPresentationModel = MainPresentationModel(client)
 
-    internal class BusStopsAdapter : AbstractExpandableItemAdapter<BusStopGroupViewHolder, ShuttleViewHolder>() {
+    internal class BusStopsAdapter(layoutManager: LinearLayoutManager) :
+        AbstractExpandableItemAdapter<BusStopGroupViewHolder, ShuttleViewHolder>() {
 
         private val items = mutableListOf<BusStopData>()
+
         private val groupItemClickSubject = PublishSubject.create<String>()
+        private val expandedItemsObservable = Observable.interval(REFRESH_TIME_IN_SECONDS, TimeUnit.SECONDS)
+            .flatMap {
+                val first = layoutManager.findFirstVisibleItemPosition()
+                val last = layoutManager.findLastVisibleItemPosition()
+
+                Observable.fromIterable(
+                    (first..last).map { i -> items[i] }
+                        .filter { item -> item.expanded }
+                        .map { item -> item.busStop.name }
+                )
+            }
 
         private val loadShuttlesCallback: (String) -> Unit = { groupItemClickSubject.onNext(it) }
 
         fun getOnGroupItemClickObservable(): Observable<String> = groupItemClickSubject
 
+        fun getExpandedItemsObservable(): Observable<String> = expandedItemsObservable
+
         fun updateBusStops(busStops: List<BusStop>) {
             items.clear()
-
             items += busStops.map { BusStopData(it) }
             notifyDataSetChanged()
+            Log.i("TEST", "UPDATED DATA")
         }
 
         fun updateBusStopShuttles(busStopName: String, shuttles: List<Shuttle>) {
