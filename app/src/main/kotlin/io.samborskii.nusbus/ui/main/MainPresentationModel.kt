@@ -5,8 +5,10 @@ import io.samborskii.nusbus.api.NusBusClient
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
 import me.dmdev.rxpm.PresentationModel
+import me.dmdev.rxpm.map.MapPresentationModel
+import javax.inject.Inject
 
-class MainPresentationModel(private val apiClient: NusBusClient) : PresentationModel() {
+class MainPresentationModel @Inject constructor(private val apiClient: NusBusClient) : MapPresentationModel() {
 
     // states
     val busStopsData = State<List<BusStop>>(emptyList())

@@ -2,6 +2,51 @@ package io.samborskii.nusbus.ui.main
 
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import io.samborskii.nusbus.NusBusApplication
+import io.samborskii.nusbus.R
+import io.samborskii.nusbus.model.BusStop
+import kotlinx.android.synthetic.main.activity_main.*
+import me.dmdev.rxpm.map.base.MapPmSupportActivity
+
+class MainActivity : MapPmSupportActivity<MainPresentationModel>() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+    }
+
+    override fun onBindMapPresentationModel(pm: MainPresentationModel, googleMap: GoogleMap) {
+        pm.busStopsData.observable bindTo { showBusStopsOnMap(it, googleMap) }
+    }
+
+    private fun showBusStopsOnMap(busStops: List<BusStop>, googleMap: GoogleMap) {
+        val markers = busStops.map {
+            MarkerOptions()
+                .position(LatLng(it.latitude, it.longitude))
+                .title(it.caption)
+        }
+
+        markers.forEach { googleMap.addMarker(it) }
+    }
+
+    override fun onBindPresentationModel(pm: MainPresentationModel) {
+//        pm.shuttleServiceData.observable bindTo { adapter.updateBusStopShuttles(it.name, it.shuttles) }
+
+        pm.errorMessage.observable bindTo { Snackbar.make(main_layout, it, Snackbar.LENGTH_SHORT).show() }
+    }
+
+    override fun providePresentationModel(): MainPresentationModel =
+        NusBusApplication.getComponent(this).newMainPresentationModel()
+}
+
+/*
+package io.samborskii.nusbus.ui.main
+
+import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.SimpleItemAnimator
 import android.util.Log
@@ -165,3 +210,4 @@ class MainActivity : PmSupportActivity<MainPresentationModel>() {
         }
     }
 }
+*/
