@@ -8,7 +8,33 @@ import io.samborskii.nusbus.R
 import io.samborskii.nusbus.model.Shuttle
 import kotlinx.android.synthetic.main.list_shuttle.view.*
 
-class ShuttleAdapter(private val shuttles: List<Shuttle>) : RecyclerView.Adapter<ShuttleViewHolder>() {
+class ShuttleAdapter(
+    private val shuttles: MutableList<Shuttle> = arrayListOf()
+) : RecyclerView.Adapter<ShuttleViewHolder>() {
+
+    fun clean() {
+        val size = this.shuttles.size
+        this.shuttles.clear()
+        notifyItemRangeRemoved(0, size)
+    }
+
+    fun updateShuttles(shuttles: List<Shuttle>) {
+        when {
+            this.shuttles.size != shuttles.size -> {
+                this.shuttles.clear()
+                this.shuttles += shuttles
+                notifyItemRangeInserted(0, this.shuttles.size)
+            }
+            else -> {
+                this.shuttles.zip(shuttles).forEachIndexed { i, (oldShuttle, shuttle) ->
+                    if (oldShuttle != shuttle) {
+                        this.shuttles[i] = shuttle
+                        notifyItemChanged(i)
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, type: Int): ShuttleViewHolder {
         val inflater = LayoutInflater.from(parent.context)

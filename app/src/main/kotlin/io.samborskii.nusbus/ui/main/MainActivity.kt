@@ -1,5 +1,7 @@
 package io.samborskii.nusbus.ui.main
 
+import android.animation.Animator
+import android.animation.AnimatorSet
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
@@ -10,7 +12,8 @@ import io.samborskii.nusbus.NusBusApplication
 import io.samborskii.nusbus.R
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.Shuttle
-import io.samborskii.nusbus.ui.anim.ResizeAnimation
+import io.samborskii.nusbus.ui.anim.EndActionListener
+import io.samborskii.nusbus.ui.anim.heightToAnimator
 import kotlinx.android.synthetic.main.activity_main.*
 import me.dmdev.rxpm.map.base.MapPmSupportActivity
 
@@ -20,23 +23,24 @@ private const val ANIMATION_DURATION: Long = 200L
 class MainActivity : MapPmSupportActivity<MainPresentationModel>() {
 
     private var headerHeight: Int = 0
-    private var shuttleCardHeight: Int = 0
+    private var shuttleCardMaxHeight: Int = 0
+    private var shuttleListItemHeight: Int = 0
+    private var shuttleListItemDividerHeight: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         headerHeight = resources.getDimension(R.dimen.bus_stop_header_height).toInt()
-        shuttleCardHeight = resources.getDimension(R.dimen.shuttle_card_height).toInt()
+        shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
+        shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_list_item_height).toInt()
+        shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_list_item_divider_height).toInt()
+
+        close_bus_stop.setOnClickListener { hideBusStopInformation() }
 
         val layoutManager = LinearLayoutManager(this)
         shuttle_list.layoutManager = layoutManager
-        shuttle_list.adapter = ShuttleAdapter(
-            listOf(
-                Shuttle("D1", "-", "-", "-", "-"),
-                Shuttle("D2", "-", "-", "-", "-")
-            )
-        )
+        shuttle_list.adapter = ShuttleAdapter()
 
         showBusStopInformation(BusStop("UTown", "University Town", 0.0, 0.0))
     }
@@ -65,16 +69,39 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>() {
     }
 
     private fun showBusStopInformation(busStop: BusStop) {
-        bus_stop_name.text = busStop.caption
+        val shuttles = listOf(
+            Shuttle("D1", "5", "14", "-", "-"),
+            Shuttle("D2", "13", "22", "-", "-")
+        )
 
-        openInformationPanels()
+        bus_stop_name.text = busStop.caption
+        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles)
+
+        openInformationPanels(shuttles.size)
     }
 
-    private fun openInformationPanels() {
-        val headerAnim = ResizeAnimation(header, 0, headerHeight, ANIMATION_DURATION)
-        val shuttleCardAnim = ResizeAnimation(shuttle_card, 0, shuttleCardHeight, ANIMATION_DURATION)
+    private fun hideBusStopInformation() {
+        val animatorSet = AnimatorSet()
+        animatorSet.playTogether(
+            heightToAnimator(header, 0, ANIMATION_DURATION),
+            heightToAnimator(shuttle_card, 0, ANIMATION_DURATION)
+        )
+        animatorSet.addListener(object : EndActionListener() {
+            override fun onAnimationEnd(animation: Animator?) {
+                (shuttle_list.adapter as ShuttleAdapter).clean()
+                bus_stop_name.text = ""
+            }
+        })
+        animatorSet.start()
+    }
 
-        header.startAnimation(headerAnim)
-        shuttle_card.startAnimation(shuttleCardAnim)
+    private fun openInformationPanels(shuttlesNum: Int) {
+        val shuttleCardHeight = minOf(
+            shuttleCardMaxHeight,
+            shuttlesNum * shuttleListItemHeight + (shuttlesNum - 1) * shuttleListItemDividerHeight
+        )
+
+        heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
+        heightToAnimator(shuttle_card, shuttleCardHeight, ANIMATION_DURATION).start()
     }
 }

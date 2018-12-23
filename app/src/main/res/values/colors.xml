@@ -5,6 +5,7 @@
     <color name="accent">#003D7C</color>
 
     <color name="highlight">#1F000000</color>
+    <color name="nav_bar">#F5F5F5</color>
 
     <color name="background">#F6F5F3</color>
     <color name="dark_gray">#515151</color>
