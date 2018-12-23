@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- General dimens -->
     <dimen name="default_padding">16dp</dimen>
     <dimen name="default_half_padding">8dp</dimen>
 
+    <dimen name="shadow_height">2dp</dimen>
+
+    <!-- Maps panel dimens -->
     <!-- status bar height -->
     <dimen name="bus_stop_header_top_padding">0dp</dimen>
-    <dimen name="bus_stop_header_height">96dp</dimen>
+    <dimen name="bus_stop_header_height">80dp</dimen>
+
+    <dimen name="shuttle_card_height">300dp</dimen>
+    <dimen name="card_corner_radius">4dp</dimen>
+    <!-- -1 * card_corner_radius -->
+    <dimen name="card_bottom_margin">-4dp</dimen>
+    <dimen name="shuttle_background_corner_radius">4dp</dimen>
+
     <dimen name="bus_stop_list_item_height">48dp</dimen>
     <dimen name="shuttle_list_item_height">48dp</dimen>
 
-    <dimen name="shadow_height">2dp</dimen>
 </resources>
