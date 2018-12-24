@@ -43,14 +43,14 @@
                       android:textSize="16sp"
                       tools:text="23"/>
 
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:textColor="@color/gray"
-                    android:fontFamily="sans-serif-light"
-                    android:textSize="12sp"
-                    android:text="@string/min"/>
+            <TextView android:id="@+id/subsequent_shuttle_units"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_horizontal"
+                      android:textColor="@color/gray"
+                      android:fontFamily="sans-serif-light"
+                      android:textSize="12sp"
+                      android:text="@string/min"/>
 
         </LinearLayout>
 
@@ -71,14 +71,14 @@
                       android:textSize="16sp"
                       tools:text="14"/>
 
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:textColor="@color/dark_gray"
-                    android:fontFamily="sans-serif-light"
-                    android:textSize="12sp"
-                    android:text="@string/min"/>
+            <TextView android:id="@+id/next_shuttle_units"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center_horizontal"
+                      android:textColor="@color/dark_gray"
+                      android:fontFamily="sans-serif-light"
+                      android:textSize="12sp"
+                      android:text="@string/min"/>
 
         </LinearLayout>
 

@@ -47,11 +47,12 @@
                       android:fontFamily="sans-serif"
                       tools:text="BIZ 2"/>
 
-            <!--placeholder-->
-            <View
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:padding="@dimen/default_half_padding"/>
+            <ImageButton android:id="@+id/refresh_shuttle"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         android:padding="@dimen/default_half_padding"
+                         android:src="@drawable/ic_sync"
+                         android:background="?attr/selectableItemBackgroundBorderless"/>
 
         </LinearLayout>
 

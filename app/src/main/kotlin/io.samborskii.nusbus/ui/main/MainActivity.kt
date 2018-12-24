@@ -14,6 +14,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.jakewharton.rxbinding2.view.clicks
 import io.reactivex.subjects.PublishSubject
 import io.samborskii.nusbus.NusBusApplication
 import io.samborskii.nusbus.R
@@ -90,6 +91,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         pm.errorMessage.observable bindTo { Snackbar.make(main_layout, it, Snackbar.LENGTH_SHORT).show() }
 
         markerClickSubject bindTo pm.loadShuttleService
+        refresh_shuttle.clicks().map { selectedMarker?.tag as String } bindTo pm.loadShuttleService.consumer
     }
 
     override fun providePresentationModel(): MainPresentationModel =

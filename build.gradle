@@ -27,8 +27,7 @@ def versions = [
         okhttp     : '3.11.0',
         retrofit   : '2.4.0',
         jackson    : '2.9.7',
-        dagger     : '2.19',
-        rxBinding2 : '2.2.0'
+        dagger     : '2.19'
 ]
 
 ext.libraries = [

@@ -13,6 +13,9 @@ data class ShuttleService(
     @JsonProperty("shuttles") val shuttles: List<Shuttle>
 )
 
+private const val ARRIVING_SHUTTLE_TIME: String = "Arr"
+private const val NO_SERVICE_SHUTTLE_TIME: String = "-"
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Shuttle(
     @JsonProperty("name") val name: String,
@@ -20,4 +23,11 @@ data class Shuttle(
     @JsonProperty("nextArrivalTime") val nextArrivalTime: String,
     @JsonProperty("passengers") val passengers: String,
     @JsonProperty("nextPassengers") val nextPassengers: String
-)
+) {
+
+    fun isArriving(): Boolean = arrivalTime == ARRIVING_SHUTTLE_TIME
+
+    fun isNextArriving(): Boolean = nextArrivalTime == ARRIVING_SHUTTLE_TIME
+
+    fun isNoService(): Boolean = arrivalTime == NO_SERVICE_SHUTTLE_TIME
+}

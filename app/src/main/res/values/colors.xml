@@ -8,9 +8,11 @@
     <color name="nav_bar">#F5F5F5</color>
 
     <color name="background">#F6F5F3</color>
+
     <color name="dark_gray">#515151</color>
     <color name="gray">#9B9B9B</color>
     <color name="light_gray">#CECECE</color>
+
     <color name="divider">#E1E1E1</color>
 
     <color name="shadow_color">#1F000000</color>
