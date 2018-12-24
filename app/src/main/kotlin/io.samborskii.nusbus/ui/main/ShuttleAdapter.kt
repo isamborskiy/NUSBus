@@ -19,21 +19,9 @@ class ShuttleAdapter(
     }
 
     fun updateShuttles(shuttles: List<Shuttle>) {
-        when {
-            this.shuttles.size != shuttles.size -> {
-                this.shuttles.clear()
-                this.shuttles += shuttles
-                notifyItemRangeInserted(0, this.shuttles.size)
-            }
-            else -> {
-                this.shuttles.zip(shuttles).forEachIndexed { i, (oldShuttle, shuttle) ->
-                    if (oldShuttle != shuttle) {
-                        this.shuttles[i] = shuttle
-                        notifyItemChanged(i)
-                    }
-                }
-            }
-        }
+        this.shuttles.clear()
+        this.shuttles += shuttles
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, type: Int): ShuttleViewHolder {
