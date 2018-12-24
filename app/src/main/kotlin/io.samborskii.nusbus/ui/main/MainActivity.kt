@@ -82,6 +82,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
             isMapToolbarEnabled = false
         }
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM))
+        // googleMap.isMyLocationEnabled = true
 
         pm.busStopsData.observable bindTo { showBusStopsOnMap(it, googleMap) }
     }
