@@ -1,11 +1,17 @@
 package io.samborskii.nusbus.ui.main
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.animation.Animator
 import android.animation.AnimatorSet
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat.checkSelfPermission
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.LinearLayoutManager
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -28,8 +34,10 @@ import me.dmdev.rxpm.map.base.MapPmSupportActivity
 
 private const val ANIMATION_DURATION: Long = 200L
 
+private const val MY_PERMISSION_ACCESS_LOCATION: Int = 1
+
 private val DEFAULT_LOCATION: LatLng = LatLng(1.2955364, 103.7737544)
-private val DEFAULT_ZOOM: Float = 15f
+private const val DEFAULT_ZOOM: Float = 15f
 
 class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
@@ -48,6 +56,8 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        requestLocationPermissions()
 
         headerHeight = resources.getDimension(R.dimen.bus_stop_header_height).toInt()
         shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
@@ -74,15 +84,26 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         return markerBitmap
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            MY_PERMISSION_ACCESS_LOCATION ->
+                if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                    enableGoogleMapLocation(googleMap)
+                }
+        }
+    }
+
     override fun onBindMapPresentationModel(pm: MainPresentationModel, googleMap: GoogleMap) {
         googleMap.setOnMarkerClickListener(this)
         googleMap.setOnMapClickListener(this)
         googleMap.uiSettings.apply {
             isCompassEnabled = false
             isMapToolbarEnabled = false
+            isMyLocationButtonEnabled = false
         }
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM))
-        // googleMap.isMyLocationEnabled = true
+        enableGoogleMapLocation(googleMap)
 
         pm.busStopsData.observable bindTo { showBusStopsOnMap(it, googleMap) }
     }
@@ -158,4 +179,20 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     }
 
     private fun BusStop.toLatLng(): LatLng = LatLng(latitude, longitude)
+
+    private fun requestLocationPermissions() {
+        if (!isLocationPermissionGranted()) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), MY_PERMISSION_ACCESS_LOCATION
+            )
+        }
+    }
+
+    private fun isLocationPermissionGranted(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+            (checkSelfPermission(this, ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                    checkSelfPermission(this, ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+
+    private fun enableGoogleMapLocation(googleMap: GoogleMap?) {
+        if (isLocationPermissionGranted() && googleMap != null) googleMap.isMyLocationEnabled = true
+    }
 }
