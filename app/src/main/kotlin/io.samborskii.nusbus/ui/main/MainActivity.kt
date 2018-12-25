@@ -1,17 +1,13 @@
 package io.samborskii.nusbus.ui.main
 
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.animation.Animator
 import android.animation.AnimatorSet
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat.checkSelfPermission
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.LinearLayoutManager
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -21,6 +17,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.jakewharton.rxbinding2.view.clicks
+import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.samborskii.nusbus.NusBusApplication
 import io.samborskii.nusbus.R
@@ -28,16 +25,13 @@ import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.Shuttle
 import io.samborskii.nusbus.ui.anim.EndActionListener
 import io.samborskii.nusbus.ui.anim.heightToAnimator
+import io.samborskii.nusbus.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import me.dmdev.rxpm.map.base.MapPmSupportActivity
 
-
 private const val ANIMATION_DURATION: Long = 200L
 
-private const val MY_PERMISSION_ACCESS_LOCATION: Int = 1
-
-private val DEFAULT_LOCATION: LatLng = LatLng(1.2955364, 103.7737544)
-private const val DEFAULT_ZOOM: Float = 15f
+private val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
 
 class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
@@ -52,6 +46,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     private var selectedMarker: Marker? = null
 
     private val markerClickSubject = PublishSubject.create<String>()
+    private val cameraPositionSubject = BehaviorSubject.create<LatLngZoom>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,24 +68,22 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         shuttle_list.adapter = ShuttleAdapter()
     }
 
-    private fun loadMarkerBitmap(): Bitmap {
-        val size = resources.getDimensionPixelSize(R.dimen.marker_size)
-        val markerBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    override fun onPause() {
+        val latLngZoom = googleMap?.cameraPosition?.let { LatLngZoom(it.target, it.zoom) } ?: emptyLatLngZoom
+        cameraPositionSubject.onNext(latLngZoom)
 
-        val shape = ResourcesCompat.getDrawable(resources, R.drawable.maps_marker, null)
-        shape!!.setBounds(0, 0, markerBitmap.width, markerBitmap.height)
-        shape.draw(Canvas(markerBitmap))
-
-        return markerBitmap
+        super.onPause()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            MY_PERMISSION_ACCESS_LOCATION ->
+            MY_PERMISSION_ACCESS_LOCATION -> {
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     enableGoogleMapLocation(googleMap)
                 }
+                requestLocationOnce()
+            }
         }
     }
 
@@ -102,18 +95,20 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
             isMapToolbarEnabled = false
             isMyLocationButtonEnabled = false
         }
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM))
         enableGoogleMapLocation(googleMap)
 
         pm.busStopsData.observable bindTo { showBusStopsOnMap(it, googleMap) }
+        pm.cameraPositionData.observable bindTo { googleMap.moveCamera(it) }
     }
 
     override fun onBindPresentationModel(pm: MainPresentationModel) {
         pm.shuttleServiceData.observable bindTo { showBusStopInformation(it.caption, it.shuttles) }
         pm.errorMessage.observable bindTo { Snackbar.make(main_layout, it, Snackbar.LENGTH_SHORT).show() }
 
-        markerClickSubject bindTo pm.loadShuttleService
-        refresh_shuttle.clicks().map { selectedMarker?.tag as String } bindTo pm.loadShuttleService.consumer
+        markerClickSubject bindTo pm.loadShuttleServiceAction
+        cameraPositionSubject bindTo pm.cameraPositionAction
+        refresh_shuttle.clicks().map { selectedMarker?.tag as String } bindTo pm.loadShuttleServiceAction.consumer
+        my_location.clicks() bindTo pm.myLocationAction.consumer
     }
 
     override fun providePresentationModel(): MainPresentationModel =
@@ -177,22 +172,24 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
         heightToAnimator(shuttle_card, shuttleCardHeight, ANIMATION_DURATION).start()
     }
+}
 
-    private fun BusStop.toLatLng(): LatLng = LatLng(latitude, longitude)
+private fun Context.loadMarkerBitmap(): Bitmap {
+    val size = resources.getDimensionPixelSize(R.dimen.marker_size)
+    val markerBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
 
-    private fun requestLocationPermissions() {
-        if (!isLocationPermissionGranted()) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), MY_PERMISSION_ACCESS_LOCATION
-            )
-        }
-    }
+    val shape = ResourcesCompat.getDrawable(resources, R.drawable.maps_marker, null)
+    shape!!.setBounds(0, 0, markerBitmap.width, markerBitmap.height)
+    shape.draw(Canvas(markerBitmap))
 
-    private fun isLocationPermissionGranted(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-            (checkSelfPermission(this, ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                    checkSelfPermission(this, ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+    return markerBitmap
+}
 
-    private fun enableGoogleMapLocation(googleMap: GoogleMap?) {
-        if (isLocationPermissionGranted() && googleMap != null) googleMap.isMyLocationEnabled = true
+private fun GoogleMap.moveCamera(latLngZoom: LatLngZoom) {
+    if (latLngZoom != emptyLatLngZoom) {
+        val zoom = maxOf(cameraPosition.zoom, latLngZoom.zoom)
+        animateCamera(CameraUpdateFactory.newLatLngZoom(latLngZoom.latLng, zoom))
     }
 }
+
+private fun BusStop.toLatLng(): LatLng = LatLng(latitude, longitude)
