@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
@@ -163,8 +164,9 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
                 Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
             }
             is BusStopsLoadingException -> {
-                Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT)
+                Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.retry) { retryClickSubject.onNext(Unit) }
+                    .setActionTextColor(ContextCompat.getColor(this, R.color.primary))
                     .show()
             }
             else -> Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
