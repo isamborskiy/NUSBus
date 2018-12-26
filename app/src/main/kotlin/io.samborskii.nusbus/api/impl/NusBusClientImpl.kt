@@ -22,7 +22,7 @@ class NusBusClientImpl(hostUrl: String, okHttpClient: OkHttpClient, mapper: Obje
         .create(NusBusApi::class.java)
 
     override fun busStops(): Single<List<BusStop>> = api.busStops()
-        .map { it.busStopsResult.busStops }
+        .map { it.busStopsResult.busStops.sortedBy { busStop -> busStop.name } }
 
     override fun shuttleService(busStopName: String): Single<ShuttleService> = api.shuttleService(busStopName)
         .map { it.shuttleService }

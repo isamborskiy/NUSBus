@@ -20,8 +20,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.jakewharton.rxbinding2.view.clicks
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import io.samborskii.nusbus.NusBusApplication
-import io.samborskii.nusbus.R
+import io.samborskii.nusbus.*
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.Shuttle
 import io.samborskii.nusbus.ui.anim.AnimationEndListener
@@ -50,14 +49,13 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
 
     private var selectedMarker: Marker? = null
 
+    private val retryClickSubject = PublishSubject.create<Unit>()
     private val markerClickSubject = PublishSubject.create<String>()
     private val cameraPositionSubject = BehaviorSubject.create<LatLngZoom>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        requestLocationPermissions()
 
         headerHeight = resources.getDimension(R.dimen.bus_stop_header_height).toInt()
         shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
@@ -80,6 +78,9 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         val latLngZoom = googleMap?.cameraPosition?.let { LatLngZoom(it.target, it.zoom) } ?: emptyLatLngZoom
         cameraPositionSubject.onNext(latLngZoom)
 
+        // FIXME:
+        selectedMarker = null
+
         super.onPause()
     }
 
@@ -89,8 +90,10 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
             MY_PERMISSION_ACCESS_LOCATION -> {
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     enableGoogleMapLocation(googleMap)
+                    requestLocationOnce()
+                } else {
+                    Snackbar.make(main_layout, R.string.location_permission_is_denied, Snackbar.LENGTH_SHORT).show()
                 }
-                requestLocationOnce()
             }
         }
     }
@@ -111,14 +114,19 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
 
     override fun onBindPresentationModel(pm: MainPresentationModel) {
         pm.shuttleServiceData.observable bindTo { showBusStopInformation(it.caption, it.shuttles) }
-        pm.errorMessage.observable bindTo { Snackbar.make(main_layout, it, Snackbar.LENGTH_SHORT).show() }
+        pm.errorMessage.observable bindTo { handleErrorMessage(it) }
 
         pm.inProgress.observable bindTo { loading.visibility = if (it) View.VISIBLE else View.GONE }
 
         markerClickSubject bindTo pm.loadShuttleServiceAction
+        retryClickSubject bindTo pm.refreshAction
         cameraPositionSubject bindTo pm.cameraPositionAction
-        refresh_shuttle.clicks().map { selectedMarker?.tag as String } bindTo pm.loadShuttleServiceAction.consumer
-        my_location.clicks() bindTo pm.myLocationAction.consumer
+
+        refresh_shuttle.clicks()
+            .filter { selectedMarker?.tag != null }
+            .map { selectedMarker?.tag as String } bindTo pm.loadShuttleServiceAction.consumer
+        my_location.clicks()
+            .filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.myLocationAction.consumer
     }
 
     override fun providePresentationModel(): MainPresentationModel =
@@ -148,11 +156,45 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         }
     }
 
+    private fun handleErrorMessage(exc: AppException) {
+        when (exc) {
+            is ShuttleLoadingException -> {
+                hideBusStopInformation()
+                Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
+            }
+            is BusStopsLoadingException -> {
+                Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT)
+                    .setAction(R.string.retry) { retryClickSubject.onNext(Unit) }
+                    .show()
+            }
+            else -> Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun isPermissionGrantedAndGpsEnabled(): Boolean {
+        val permissionGranted = isLocationPermissionGranted()
+        if (!permissionGranted) requestLocationPermissions()
+
+        val gpsEnabled = isGpsEnabled()
+        if (permissionGranted && !gpsEnabled) {
+            Snackbar.make(main_layout, R.string.turn_on_device_location, Snackbar.LENGTH_SHORT).show()
+        }
+
+        return permissionGranted && gpsEnabled
+    }
+
     private fun showBusStopInformation(busStopCaption: String, shuttles: List<Shuttle>) {
         bus_stop_name.text = busStopCaption
-        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles)
+        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles.sortedBy { it.name })
 
-        openInformationPanels(shuttles.size)
+        val shuttleCardHeight = minOf(
+            shuttleCardMaxHeight,
+            shuttles.size * shuttleListItemHeight + shuttles.size * shuttleListItemDividerHeight
+        )
+
+        heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
+        topMarginToAnimator(loading, progressBarMargin, ANIMATION_DURATION).start()
+        heightToAnimator(shuttle_card, shuttleCardHeight, ANIMATION_DURATION).start()
     }
 
     private fun hideBusStopInformation() {
@@ -173,17 +215,6 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         })
         animatorSet.start()
     }
-
-    private fun openInformationPanels(shuttlesNum: Int) {
-        val shuttleCardHeight = minOf(
-            shuttleCardMaxHeight,
-            shuttlesNum * shuttleListItemHeight + (shuttlesNum - 1) * shuttleListItemDividerHeight
-        )
-
-        heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
-        topMarginToAnimator(loading, progressBarMargin, ANIMATION_DURATION).start()
-        heightToAnimator(shuttle_card, shuttleCardHeight, ANIMATION_DURATION).start()
-    }
 }
 
 private fun Context.loadMarkerBitmap(): Bitmap {
@@ -200,7 +231,8 @@ private fun Context.loadMarkerBitmap(): Bitmap {
 private fun GoogleMap.moveCamera(latLngZoom: LatLngZoom) {
     if (latLngZoom != emptyLatLngZoom) {
         val zoom = maxOf(cameraPosition.zoom, latLngZoom.zoom)
-        animateCamera(CameraUpdateFactory.newLatLngZoom(latLngZoom.latLng, zoom))
+        val cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLngZoom.latLng, zoom)
+        if (cameraPosition.target.isDefaultLocation()) moveCamera(cameraUpdate) else animateCamera(cameraUpdate)
     }
 }
 

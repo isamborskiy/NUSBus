@@ -3,6 +3,10 @@ package io.samborskii.nusbus.ui.main
 import android.content.Context
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
+import io.samborskii.nusbus.AppException
+import io.samborskii.nusbus.BusStopsLoadingException
+import io.samborskii.nusbus.R
+import io.samborskii.nusbus.ShuttleLoadingException
 import io.samborskii.nusbus.api.NusBusClient
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
@@ -26,7 +30,7 @@ class MainPresentationModel @Inject constructor(
     val inProgress = State(false)
 
     // commands
-    val errorMessage = Command<String>()
+    val errorMessage = Command<AppException>()
 
     // actions
     val refreshAction = Action<Unit>()
@@ -43,7 +47,7 @@ class MainPresentationModel @Inject constructor(
                 apiClient.busStops()
                     .bindProgress(inProgress.consumer)
                     .subscribeOn(Schedulers.io())
-                    .doOnError { errorMessage.consumer.accept("Loading data error") }
+                    .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(context.getString(R.string.bus_stops_loading_error))) }
             }
             .retry()
             .subscribe(busStopsData.consumer)
@@ -55,7 +59,7 @@ class MainPresentationModel @Inject constructor(
                 apiClient.shuttleService(busStopName)
                     .bindProgress(inProgress.consumer)
                     .subscribeOn(Schedulers.io())
-                    .doOnError { errorMessage.consumer.accept("Cannot load shuttle service") }
+                    .doOnError { errorMessage.consumer.accept(ShuttleLoadingException("Cannot load shuttle service")) }
             }
             .retry()
             .subscribe(shuttleServiceData.consumer)
