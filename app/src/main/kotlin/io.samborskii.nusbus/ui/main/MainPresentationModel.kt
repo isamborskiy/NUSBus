@@ -8,7 +8,9 @@ import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
 import io.samborskii.nusbus.util.LatLngZoom
 import io.samborskii.nusbus.util.requestLocationOnce
+import me.dmdev.rxpm.bindProgress
 import me.dmdev.rxpm.map.MapPresentationModel
+import me.dmdev.rxpm.skipWhileInProgress
 import javax.inject.Inject
 
 class MainPresentationModel @Inject constructor(
@@ -20,6 +22,8 @@ class MainPresentationModel @Inject constructor(
     val busStopsData = State<List<BusStop>>(emptyList())
     val shuttleServiceData = State<ShuttleService>()
     val cameraPositionData = State<LatLngZoom>()
+
+    val inProgress = State(false)
 
     // commands
     val errorMessage = Command<String>()
@@ -34,8 +38,10 @@ class MainPresentationModel @Inject constructor(
         super.onCreate()
 
         refreshAction.observable
+            .skipWhileInProgress(inProgress.observable)
             .flatMapSingle {
                 apiClient.busStops()
+                    .bindProgress(inProgress.consumer)
                     .subscribeOn(Schedulers.io())
                     .doOnError { errorMessage.consumer.accept("Loading data error") }
             }
@@ -44,8 +50,10 @@ class MainPresentationModel @Inject constructor(
             .untilDestroy()
 
         loadShuttleServiceAction.observable
+            .skipWhileInProgress(inProgress.observable)
             .flatMapSingle { busStopName ->
                 apiClient.shuttleService(busStopName)
+                    .bindProgress(inProgress.consumer)
                     .subscribeOn(Schedulers.io())
                     .doOnError { errorMessage.consumer.accept("Cannot load shuttle service") }
             }

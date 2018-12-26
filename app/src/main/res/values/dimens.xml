@@ -24,4 +24,9 @@
     <!-- marker dimens -->
     <dimen name="marker_size">12dp</dimen>
 
+    <!-- progress bar dimens -->
+    <dimen name="progress_bar_margin">-9dp</dimen>
+    <!-- status_bar_height + progress_bar_margin -->
+    <dimen name="default_progress_bar_margin">15dp</dimen>
+
 </resources>

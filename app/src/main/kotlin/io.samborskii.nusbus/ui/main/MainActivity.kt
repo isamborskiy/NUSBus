@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.LinearLayoutManager
+import android.view.View
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -23,8 +24,9 @@ import io.samborskii.nusbus.NusBusApplication
 import io.samborskii.nusbus.R
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.Shuttle
-import io.samborskii.nusbus.ui.anim.EndActionListener
+import io.samborskii.nusbus.ui.anim.AnimationEndListener
 import io.samborskii.nusbus.ui.anim.heightToAnimator
+import io.samborskii.nusbus.ui.anim.topMarginToAnimator
 import io.samborskii.nusbus.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import me.dmdev.rxpm.map.base.MapPmSupportActivity
@@ -40,6 +42,9 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     private var shuttleCardMaxHeight: Int = 0
     private var shuttleListItemHeight: Int = 0
     private var shuttleListItemDividerHeight: Int = 0
+
+    private var statusBarHeight: Int = 0
+    private var progressBarMargin: Int = 0
 
     private lateinit var markerBitmap: Bitmap
 
@@ -58,6 +63,9 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
         shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_list_item_height).toInt()
         shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_list_item_divider_height).toInt()
+
+        statusBarHeight = resources.getDimension(R.dimen.bus_stop_header_top_padding).toInt()
+        progressBarMargin = resources.getDimension(R.dimen.progress_bar_margin).toInt()
 
         markerBitmap = loadMarkerBitmap()
 
@@ -104,6 +112,8 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     override fun onBindPresentationModel(pm: MainPresentationModel) {
         pm.shuttleServiceData.observable bindTo { showBusStopInformation(it.caption, it.shuttles) }
         pm.errorMessage.observable bindTo { Snackbar.make(main_layout, it, Snackbar.LENGTH_SHORT).show() }
+
+        pm.inProgress.observable bindTo { loading.visibility = if (it) View.VISIBLE else View.GONE }
 
         markerClickSubject bindTo pm.loadShuttleServiceAction
         cameraPositionSubject bindTo pm.cameraPositionAction
@@ -152,9 +162,10 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         val animatorSet = AnimatorSet()
         animatorSet.playTogether(
             heightToAnimator(header, 0, ANIMATION_DURATION),
-            heightToAnimator(shuttle_card, 0, ANIMATION_DURATION)
+            heightToAnimator(shuttle_card, 0, ANIMATION_DURATION),
+            topMarginToAnimator(loading, statusBarHeight + progressBarMargin, ANIMATION_DURATION)
         )
-        animatorSet.addListener(object : EndActionListener() {
+        animatorSet.addListener(object : AnimationEndListener {
             override fun onAnimationEnd(animation: Animator?) {
                 (shuttle_list.adapter as ShuttleAdapter).clean()
                 bus_stop_name.text = ""
@@ -170,6 +181,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         )
 
         heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
+        topMarginToAnimator(loading, progressBarMargin, ANIMATION_DURATION).start()
         heightToAnimator(shuttle_card, shuttleCardHeight, ANIMATION_DURATION).start()
     }
 }
