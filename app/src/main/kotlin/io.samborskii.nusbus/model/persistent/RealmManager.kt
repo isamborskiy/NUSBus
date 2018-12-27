@@ -2,17 +2,23 @@ package io.samborskii.nusbus.model.persistent
 
 import io.realm.Realm
 import io.realm.RealmObject
+import io.realm.kotlin.where
 
-fun <R : RealmObject> R.insert() =
+fun <R : RealmObject> R.upsert() =
     Realm.getDefaultInstance().use { realm ->
         realm.executeTransaction {
-            it.copyToRealm(this)
+            it.copyToRealmOrUpdate(this)
         }
     }
 
-fun <R : RealmObject> List<R>.insertList() =
+fun <R : RealmObject> List<R>.upsertList() =
     Realm.getDefaultInstance().use { realm ->
         realm.executeTransaction {
-            it.copyToRealm(this)
+            it.copyToRealmOrUpdate(this)
         }
+    }
+
+inline fun <reified R : RealmObject, E> selectEntities(convert: (R) -> E): List<E> =
+    Realm.getDefaultInstance().use { realm ->
+        realm.where<R>().findAll().map(convert)
     }

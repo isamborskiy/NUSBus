@@ -32,5 +32,4 @@ data class Shuttle(
     fun isNoService(): Boolean = arrivalTime == NO_SERVICE_SHUTTLE_TIME
 
     override fun compareTo(other: Shuttle): Int = name.compareTo(other.name)
-
 }

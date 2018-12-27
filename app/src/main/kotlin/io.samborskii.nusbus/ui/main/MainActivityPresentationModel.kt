@@ -9,6 +9,7 @@ import io.samborskii.nusbus.R
 import io.samborskii.nusbus.api.NusBusClient
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
+import io.samborskii.nusbus.model.persistent.*
 import io.samborskii.nusbus.util.LatLngZoom
 import io.samborskii.nusbus.util.requestLocationOnce
 import me.dmdev.rxpm.bindProgress
@@ -42,6 +43,8 @@ class MainActivityPresentationModel @Inject constructor(
     val requestMyLocationAction = Action<Unit>()
     val changeCameraPositionAction = Action<LatLngZoom>()
 
+    private val nusBusServerErrorMessage: String = context.getString(R.string.nus_bus_server_error)
+
     override fun onCreate() {
         super.onCreate()
 
@@ -51,11 +54,8 @@ class MainActivityPresentationModel @Inject constructor(
                 apiClient.busStops()
                     .bindProgress(inProgress.consumer)
                     .subscribeOn(Schedulers.io())
-                    .doOnError {
-                        errorMessage.consumer.accept(
-                            BusStopsLoadingException(context.getString(R.string.nus_bus_server_error))
-                        )
-                    }
+                    .doOnSuccess { busStops -> busStops.map { busStop -> busStop.toRealm() }.upsertList() }
+                    .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(nusBusServerErrorMessage)) }
             }
             .retry()
             .subscribe(busStopsData.consumer)
@@ -70,11 +70,7 @@ class MainActivityPresentationModel @Inject constructor(
                     apiClient.shuttleService(busStopName)
                         .bindProgress(inProgress.consumer)
                         .subscribeOn(Schedulers.io())
-                        .doOnError {
-                            errorMessage.consumer.accept(
-                                ShuttleLoadingException(context.getString(R.string.nus_bus_server_error))
-                            )
-                        }
+                        .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
                 }
             }
             .retry()
@@ -88,7 +84,18 @@ class MainActivityPresentationModel @Inject constructor(
             .subscribe(cameraPositionData.consumer)
             .untilDestroy()
 
-        refreshBusStopsAction.consumer.accept(Unit)
+
+        Observable.create<Unit> { subscriber ->
+            val busStops = selectEntities(RealmBusStop::fromRealm)
+            busStopsData.consumer.accept(busStops)
+
+            refreshBusStopsAction.consumer.accept(Unit)
+
+            subscriber.onComplete()
+        }.subscribeOn(Schedulers.io())
+            .subscribe()
+            .untilDestroy()
+
         requestMyLocationAction.consumer.accept(Unit)
     }
 }
