@@ -6,7 +6,7 @@
     <string name="no_service">No service</string>
     <string name="retry">Retry</string>
 
-    <string name="bus_stops_loading_error">NUS bus server is not responding</string>
+    <string name="nus_bus_server_error">NUS bus server is not responding</string>
 
     <string name="location_permission_is_denied">Location permission is denied</string>
     <string name="turn_on_device_location">Turn on device location</string>

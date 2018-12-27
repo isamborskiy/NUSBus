@@ -16,4 +16,6 @@
     <color name="divider">#E1E1E1</color>
 
     <color name="shadow_color">#1F000000</color>
+
+    <color name="marker">#FF0000</color>
 </resources>

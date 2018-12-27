@@ -21,9 +21,10 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.jakewharton.rxbinding2.view.clicks
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import io.samborskii.nusbus.*
+import io.samborskii.nusbus.NusBusApplication
+import io.samborskii.nusbus.R
 import io.samborskii.nusbus.model.BusStop
-import io.samborskii.nusbus.model.Shuttle
+import io.samborskii.nusbus.model.ShuttleService
 import io.samborskii.nusbus.ui.anim.AnimationEndListener
 import io.samborskii.nusbus.ui.anim.heightToAnimator
 import io.samborskii.nusbus.ui.anim.topMarginToAnimator
@@ -33,9 +34,7 @@ import me.dmdev.rxpm.map.base.MapPmSupportActivity
 
 private const val ANIMATION_DURATION: Long = 200L
 
-private val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
-
-class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
+class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
 
     private var headerHeight: Int = 0
@@ -48,11 +47,11 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
 
     private lateinit var markerBitmap: Bitmap
 
-    private var selectedMarker: Marker? = null
+    private val markers: MutableMap<String, Marker> = HashMap()
 
-    private val retryClickSubject = PublishSubject.create<Unit>()
-    private val markerClickSubject = PublishSubject.create<String>()
-    private val cameraPositionSubject = BehaviorSubject.create<LatLngZoom>()
+    private val refreshBusStopsSubject = PublishSubject.create<Unit>()
+    private val selectMarkerSubject = PublishSubject.create<String>()
+    private val changeCameraPositionSubject = BehaviorSubject.create<LatLngZoom>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +67,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
 
         markerBitmap = loadMarkerBitmap()
 
-        close_bus_stop.setOnClickListener { hideBusStopInformation() }
+        close_bus_stop.setOnClickListener { selectMarkerSubject.onNext(emptyBusStopName) }
 
         val layoutManager = LinearLayoutManager(this)
         shuttle_list.layoutManager = layoutManager
@@ -77,10 +76,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
 
     override fun onPause() {
         val latLngZoom = googleMap?.cameraPosition?.let { LatLngZoom(it.target, it.zoom) } ?: emptyLatLngZoom
-        cameraPositionSubject.onNext(latLngZoom)
-
-        // FIXME:
-        selectedMarker = null
+        changeCameraPositionSubject.onNext(latLngZoom)
 
         super.onPause()
     }
@@ -99,7 +95,41 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         }
     }
 
-    override fun onBindMapPresentationModel(pm: MainPresentationModel, googleMap: GoogleMap) {
+    override fun onBindMapPresentationModel(pm: MainActivityPresentationModel, googleMap: GoogleMap) {
+        setupMaps(googleMap)
+
+        pm.busStopsData.observable bindTo { showBusStopsOnMap(it, googleMap, pm.shuttleServiceData.value) }
+        pm.cameraPositionData.observable bindTo { googleMap.moveCamera(it) }
+    }
+
+    override fun onBindPresentationModel(pm: MainActivityPresentationModel) {
+        pm.shuttleServiceData.observable bindTo { updateBusStopInformation(it) }
+        pm.errorMessage.observable bindTo { handleErrorMessage(it) }
+
+        pm.inProgress.observable bindTo { loading.visibility = if (it) View.VISIBLE else View.GONE }
+
+        selectMarkerSubject bindTo pm.loadShuttleServiceAction
+        refreshBusStopsSubject bindTo pm.refreshBusStopsAction
+        changeCameraPositionSubject bindTo pm.changeCameraPositionAction
+
+        refresh_shuttle.clicks()
+            .map { pm.shuttleServiceData.value.name } bindTo pm.loadShuttleServiceAction.consumer
+        my_location.clicks()
+            .filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.requestMyLocationAction.consumer
+    }
+
+    override fun providePresentationModel(): MainActivityPresentationModel =
+        NusBusApplication.getComponent(this).newMainPresentationModel()
+
+    override fun onMarkerClick(marker: Marker): Boolean {
+        val busStopName = marker.tag as String
+        selectMarkerSubject.onNext(busStopName)
+        return false
+    }
+
+    override fun onMapClick(latLng: LatLng) = selectMarkerSubject.onNext(emptyBusStopName)
+
+    private fun setupMaps(googleMap: GoogleMap) {
         googleMap.setOnMarkerClickListener(this)
         googleMap.setOnMapClickListener(this)
         googleMap.uiSettings.apply {
@@ -108,64 +138,32 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
             isMyLocationButtonEnabled = false
         }
         enableGoogleMapLocation(googleMap)
-
-        pm.busStopsData.observable bindTo { showBusStopsOnMap(it, googleMap) }
-        pm.cameraPositionData.observable bindTo { googleMap.moveCamera(it) }
     }
 
-    override fun onBindPresentationModel(pm: MainPresentationModel) {
-        pm.shuttleServiceData.observable bindTo { showBusStopInformation(it.caption, it.shuttles) }
-        pm.errorMessage.observable bindTo { handleErrorMessage(it) }
-
-        pm.inProgress.observable bindTo { loading.visibility = if (it) View.VISIBLE else View.GONE }
-
-        markerClickSubject bindTo pm.loadShuttleServiceAction
-        retryClickSubject bindTo pm.refreshAction
-        cameraPositionSubject bindTo pm.cameraPositionAction
-
-        refresh_shuttle.clicks()
-            .filter { selectedMarker?.tag != null }
-            .map { selectedMarker?.tag as String } bindTo pm.loadShuttleServiceAction.consumer
-        my_location.clicks()
-            .filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.myLocationAction.consumer
-    }
-
-    override fun providePresentationModel(): MainPresentationModel =
-        NusBusApplication.getComponent(this).newMainPresentationModel()
-
-    override fun onMarkerClick(marker: Marker): Boolean {
-        if (marker != selectedMarker) selectedMarker?.setIcon(BitmapDescriptorFactory.fromBitmap(markerBitmap))
-        selectedMarker = marker
-        marker.setIcon(null)
-
-        val busStopName = marker.tag as String
-        markerClickSubject.onNext(busStopName)
-        return false
-    }
-
-    override fun onMapClick(latLng: LatLng) = hideBusStopInformation()
-
-    private fun showBusStopsOnMap(busStops: List<BusStop>, googleMap: GoogleMap) {
+    private fun showBusStopsOnMap(busStops: List<BusStop>, googleMap: GoogleMap, shuttleService: ShuttleService) {
         googleMap.clear()
 
-        busStops.forEach {
+        markers.clear()
+        markers += busStops.associate {
             val markerOptions = MarkerOptions()
                 .position(it.toLatLng())
                 .icon(BitmapDescriptorFactory.fromBitmap(markerBitmap))
-            val marker = googleMap.addMarker(markerOptions)
-            marker.tag = it.name
+            val marker = googleMap.addMarker(markerOptions).apply { tag = it.name }
+            it.name to marker
         }
+
+        markers[shuttleService.name]?.setIcon(null)
     }
 
-    private fun handleErrorMessage(exc: AppException) {
+    private fun handleErrorMessage(exc: MainActivityException) {
         when (exc) {
             is ShuttleLoadingException -> {
-                hideBusStopInformation()
+                selectMarkerSubject.onNext(emptyBusStopName)
                 Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
             }
             is BusStopsLoadingException -> {
                 Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.retry) { retryClickSubject.onNext(Unit) }
+                    .setAction(R.string.retry) { refreshBusStopsSubject.onNext(Unit) }
                     .setActionTextColor(ContextCompat.getColor(this, R.color.primary))
                     .show()
             }
@@ -185,9 +183,26 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
         return permissionGranted && gpsEnabled
     }
 
-    private fun showBusStopInformation(busStopCaption: String, shuttles: List<Shuttle>) {
+    private fun updateBusStopInformation(shuttleService: ShuttleService) {
+        if (shuttleService == emptyShuttleService) {
+            hideBusStopInformation()
+        } else {
+            showBusStopInformation(shuttleService)
+        }
+    }
+
+    private fun showBusStopInformation(shuttleService: ShuttleService) {
+        val (busStopCaption, busStopName, shuttles) = shuttleService
+        markers.forEach { (name, marker) ->
+            if (name == busStopName) {
+                marker.setIcon(null)
+            } else {
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(markerBitmap))
+            }
+        }
+
         bus_stop_name.text = busStopCaption
-        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles.sortedBy { it.name })
+        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles)
 
         val shuttleCardHeight = minOf(
             shuttleCardMaxHeight,
@@ -200,8 +215,7 @@ class MainActivity : MapPmSupportActivity<MainPresentationModel>(),
     }
 
     private fun hideBusStopInformation() {
-        selectedMarker?.setIcon(BitmapDescriptorFactory.fromBitmap(markerBitmap))
-        selectedMarker = null
+        markers.forEach { (_, marker) -> marker.setIcon(BitmapDescriptorFactory.fromBitmap(markerBitmap)) }
 
         val animatorSet = AnimatorSet()
         animatorSet.playTogether(

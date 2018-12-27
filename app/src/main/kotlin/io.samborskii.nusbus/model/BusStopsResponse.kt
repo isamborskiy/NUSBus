@@ -15,4 +15,7 @@ data class BusStop(
     @JsonProperty("caption") val caption: String,
     @JsonProperty("latitude") val latitude: Double,
     @JsonProperty("longitude") val longitude: Double
-)
+) : Comparable<BusStop> {
+
+    override fun compareTo(other: BusStop): Int = name.compareTo(other.name)
+}

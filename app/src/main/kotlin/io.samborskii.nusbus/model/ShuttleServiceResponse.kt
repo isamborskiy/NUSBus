@@ -23,11 +23,14 @@ data class Shuttle(
     @JsonProperty("nextArrivalTime") val nextArrivalTime: String,
     @JsonProperty("passengers") val passengers: String,
     @JsonProperty("nextPassengers") val nextPassengers: String
-) {
+) : Comparable<Shuttle> {
 
     fun isArriving(): Boolean = arrivalTime == ARRIVING_SHUTTLE_TIME
 
     fun isNextArriving(): Boolean = nextArrivalTime == ARRIVING_SHUTTLE_TIME
 
     fun isNoService(): Boolean = arrivalTime == NO_SERVICE_SHUTTLE_TIME
+
+    override fun compareTo(other: Shuttle): Int = name.compareTo(other.name)
+
 }
