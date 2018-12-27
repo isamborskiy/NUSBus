@@ -7,7 +7,6 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:3.2.1"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "io.realm:realm-gradle-plugin:5.8.0"
     }
 }
 
@@ -27,7 +26,8 @@ def versions = [
         okhttp     : '3.11.0',
         retrofit   : '2.4.0',
         jackson    : '2.9.7',
-        dagger     : '2.19'
+        dagger     : '2.19',
+        room       : '1.1.1'
 ]
 
 ext.libraries = [
@@ -62,9 +62,14 @@ ext.libraries = [
         dagger             : 'com.google.dagger:dagger:' + versions.dagger,
         daggerProcessor    : 'com.google.dagger:dagger-compiler:' + versions.dagger,
 
+        // database
+        roomRuntime        : 'android.arch.persistence.room:runtime:' + versions.room,
+        roomCompiler       : 'android.arch.persistence.room:compiler:' + versions.room,
+
         // test libraries
         junit              : 'junit:junit:4.12',
         testRunner         : 'com.android.support.test:runner:1.0.2',
-        espresso           : 'com.android.support.test.espresso:espresso-core:3.0.2'
+        espresso           : 'com.android.support.test.espresso:espresso-core:3.0.2',
+        roomTesting        : 'android.arch.persistence.room:testing:' + versions.room,
 ]
 

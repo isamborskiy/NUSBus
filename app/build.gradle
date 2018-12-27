@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 28
@@ -61,7 +60,11 @@ dependencies {
     kapt libraries.daggerProcessor
     implementation libraries.dagger
 
+    kapt libraries.roomCompiler
+    implementation libraries.roomRuntime
+
     testImplementation libraries.junit
     androidTestImplementation libraries.testRunner
     androidTestImplementation libraries.espresso
+    androidTestImplementation libraries.roomTesting
 }

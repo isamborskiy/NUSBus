@@ -9,7 +9,7 @@ import io.samborskii.nusbus.R
 import io.samborskii.nusbus.api.NusBusClient
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
-import io.samborskii.nusbus.model.persistent.*
+import io.samborskii.nusbus.model.dao.BusStopDao
 import io.samborskii.nusbus.util.LatLngZoom
 import io.samborskii.nusbus.util.requestLocationOnce
 import me.dmdev.rxpm.bindProgress
@@ -24,6 +24,7 @@ val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
 
 class MainActivityPresentationModel @Inject constructor(
     private val apiClient: NusBusClient,
+    private val busStopDao: BusStopDao,
     private val context: Context
 ) : MapPresentationModel() {
 
@@ -54,7 +55,7 @@ class MainActivityPresentationModel @Inject constructor(
                 apiClient.busStops()
                     .bindProgress(inProgress.consumer)
                     .subscribeOn(Schedulers.io())
-                    .doOnSuccess { busStops -> busStops.map { busStop -> busStop.toRealm() }.upsertList() }
+                    .doOnSuccess { busStops -> busStopDao.upsert(busStops) }
                     .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(nusBusServerErrorMessage)) }
             }
             .retry()
@@ -86,7 +87,7 @@ class MainActivityPresentationModel @Inject constructor(
 
 
         Observable.create<Unit> { subscriber ->
-            val busStops = selectEntities(RealmBusStop::fromRealm)
+            val busStops = busStopDao.findAll()
             busStopsData.consumer.accept(busStops)
 
             refreshBusStopsAction.consumer.accept(Unit)

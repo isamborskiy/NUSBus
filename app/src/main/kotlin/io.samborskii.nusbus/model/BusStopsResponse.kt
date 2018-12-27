@@ -1,5 +1,7 @@
 package io.samborskii.nusbus.model
 
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.PrimaryKey
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -9,9 +11,10 @@ data class BusStopsResponse(@JsonProperty("BusStopsResult") val busStopsResult: 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BusStopsResult(@JsonProperty("busstops") val busStops: List<BusStop>)
 
+@Entity(tableName = "bus_stop")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BusStop(
-    @JsonProperty("name") val name: String,
+    @PrimaryKey @JsonProperty("name") val name: String,
     @JsonProperty("caption") val caption: String,
     @JsonProperty("latitude") val latitude: Double,
     @JsonProperty("longitude") val longitude: Double

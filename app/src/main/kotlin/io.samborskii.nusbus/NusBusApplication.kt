@@ -2,9 +2,8 @@ package io.samborskii.nusbus
 
 import android.app.Application
 import android.content.Context
-import io.realm.Realm
-import io.realm.RealmConfiguration
 import io.samborskii.nusbus.api.ApiModule
+import io.samborskii.nusbus.model.dao.DatabaseModule
 import io.samborskii.nusbus.net.NetModule
 
 
@@ -15,18 +14,8 @@ class NusBusApplication : Application() {
             .appModule(AppModule(this))
             .netModule(NetModule())
             .apiModule(ApiModule())
+            .databaseModule(DatabaseModule(this))
             .build()
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-
-        Realm.init(this)
-
-        val realmConfig = RealmConfiguration.Builder()
-            .deleteRealmIfMigrationNeeded()
-            .build()
-        Realm.setDefaultConfiguration(realmConfig)
     }
 
     companion object {
