@@ -62,6 +62,7 @@ dependencies {
 
     kapt libraries.roomCompiler
     implementation libraries.roomRuntime
+    implementation libraries.roomRx
 
     testImplementation libraries.junit
     androidTestImplementation libraries.testRunner

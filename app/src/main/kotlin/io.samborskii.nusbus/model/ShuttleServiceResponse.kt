@@ -1,15 +1,19 @@
 package io.samborskii.nusbus.model
 
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.PrimaryKey
+import android.arch.persistence.room.TypeConverter
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ShuttleServiceResponse(@JsonProperty("ShuttleServiceResult") val shuttleService: ShuttleService)
 
+@Entity(tableName = "shuttle_service")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ShuttleService(
     @JsonProperty("caption") val caption: String,
-    @JsonProperty("name") val name: String,
+    @PrimaryKey @JsonProperty("name") val name: String,
     @JsonProperty("shuttles") val shuttles: List<Shuttle>
 )
 
@@ -32,4 +36,20 @@ data class Shuttle(
     fun isNoService(): Boolean = arrivalTime == NO_SERVICE_SHUTTLE_TIME
 
     override fun compareTo(other: Shuttle): Int = name.compareTo(other.name)
+}
+
+class ShuttleConverters {
+
+    companion object {
+
+        @TypeConverter
+        @JvmStatic
+        fun fromShuttle(shuttles: List<Shuttle>?): String? = shuttles?.joinToString { it.name }
+
+        @TypeConverter
+        @JvmStatic
+        fun toShuttle(name: String?): List<Shuttle>? = name
+            ?.split(",")
+            ?.map { Shuttle(it, "-", "-", "-", "-") }
+    }
 }

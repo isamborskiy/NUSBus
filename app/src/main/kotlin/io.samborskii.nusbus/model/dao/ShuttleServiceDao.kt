@@ -5,14 +5,14 @@ import android.arch.persistence.room.Insert
 import android.arch.persistence.room.OnConflictStrategy
 import android.arch.persistence.room.Query
 import io.reactivex.Single
-import io.samborskii.nusbus.model.BusStop
+import io.samborskii.nusbus.model.ShuttleService
 
 @Dao
-interface BusStopDao {
+interface ShuttleServiceDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun upsert(busStops: List<BusStop>)
+    fun upsert(shuttleService: ShuttleService)
 
-    @Query("SELECT * FROM bus_stop")
-    fun findAll(): Single<List<BusStop>>
+    @Query("SELECT * FROM shuttle_service WHERE name = :name")
+    fun findByName(name: String): Single<ShuttleService>
 }

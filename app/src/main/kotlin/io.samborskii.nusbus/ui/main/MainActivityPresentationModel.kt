@@ -85,16 +85,10 @@ class MainActivityPresentationModel @Inject constructor(
             .subscribe(cameraPositionData.consumer)
             .untilDestroy()
 
-
-        Observable.create<Unit> { subscriber ->
-            val busStops = busStopDao.findAll()
-            busStopsData.consumer.accept(busStops)
-
-            refreshBusStopsAction.consumer.accept(Unit)
-
-            subscriber.onComplete()
-        }.subscribeOn(Schedulers.io())
-            .subscribe()
+        busStopDao.findAll()
+            .subscribeOn(Schedulers.io())
+            .doAfterTerminate { refreshBusStopsAction.consumer.accept(Unit) }
+            .subscribe(busStopsData.consumer)
             .untilDestroy()
 
         requestMyLocationAction.consumer.accept(Unit)

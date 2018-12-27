@@ -10,9 +10,14 @@ import javax.inject.Singleton
 open class DatabaseModule(application: NusBusApplication) {
 
     private val appDatabase: AppDatabase =
-        Room.databaseBuilder(application, AppDatabase::class.java, "nus-bus-db").build()
+        Room.databaseBuilder(application, AppDatabase::class.java, "nus-bus-db")
+            .build()
 
     @Singleton
     @Provides
     fun busStopDao(): BusStopDao = appDatabase.getBusStopDao()
+
+    @Singleton
+    @Provides
+    fun shuttleServiceDao(): ShuttleServiceDao = appDatabase.getShuttleServiceDao()
 }
