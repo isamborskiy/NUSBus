@@ -12,8 +12,10 @@
     <dimen name="bus_stop_header_top_padding">0dp</dimen>
     <dimen name="bus_stop_header_height">80dp</dimen>
 
-    <!-- shuttle_list_item_height * 4 + shuttle_list_item_divider_height * 3 -->
+    <!-- (shuttle_list_item_height + shuttle_list_item_divider_height) * 4 -->
     <dimen name="shuttle_card_max_height">228dp</dimen>
+    <!-- (shuttle_list_item_height + shuttle_list_item_divider_height) * 3 -->
+    <dimen name="shuttle_card_min_height">171dp</dimen>
     <dimen name="card_corner_radius">4dp</dimen>
     <!-- -1 * card_corner_radius -->
     <dimen name="card_bottom_margin">-4dp</dimen>

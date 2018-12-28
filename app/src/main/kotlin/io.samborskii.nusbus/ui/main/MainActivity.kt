@@ -38,6 +38,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
 
     private var headerHeight: Int = 0
+    private var shuttleCardMinHeight: Int = 0
     private var shuttleCardMaxHeight: Int = 0
     private var shuttleListItemHeight: Int = 0
     private var shuttleListItemDividerHeight: Int = 0
@@ -59,6 +60,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         setContentView(R.layout.activity_main)
 
         headerHeight = resources.getDimension(R.dimen.bus_stop_header_height).toInt()
+        shuttleCardMinHeight = resources.getDimension(R.dimen.shuttle_card_min_height).toInt()
         shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
         shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_list_item_height).toInt()
         shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_list_item_divider_height).toInt()
@@ -69,6 +71,8 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         markerBitmap = loadMarkerBitmap()
 
         close_bus_stop.setOnClickListener { selectMarkerSubject.onNext(emptyBusStopName) }
+
+        swipe_refresh_layout.setColorSchemeResources(R.color.primary, R.color.primaryDark)
         swipe_refresh_layout.setOnRefreshListener {
             refreshShuttleServiceSubject.onNext(Unit)
             swipe_refresh_layout.isRefreshing = false
@@ -208,8 +212,8 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         bus_stop_name.text = busStopCaption
         (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles ?: emptyList())
 
-        val shuttleCardHeight =
-            minOf(shuttleCardMaxHeight, (shuttles?.size ?: 0) * (shuttleListItemHeight + shuttleListItemDividerHeight))
+        var shuttleCardHeight = (shuttles?.size ?: 0) * (shuttleListItemHeight + shuttleListItemDividerHeight)
+        shuttleCardHeight = shuttleCardHeight.coerceIn(shuttleCardMinHeight..shuttleCardMaxHeight)
 
         heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
         topMarginToAnimator(loading, progressBarMargin, ANIMATION_DURATION).start()
