@@ -25,6 +25,7 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
         test.java.srcDirs += 'src/test/kotlin'
+        androidTest.java.srcDirs += 'src/androidTest/kotlin'
     }
 
     buildTypes {
@@ -32,6 +33,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -65,7 +70,8 @@ dependencies {
     implementation libraries.roomRx
 
     testImplementation libraries.junit
+    testImplementation libraries.assertj
+    androidTestImplementation libraries.roomTesting
     androidTestImplementation libraries.testRunner
     androidTestImplementation libraries.espresso
-    androidTestImplementation libraries.roomTesting
 }

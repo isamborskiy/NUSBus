@@ -42,14 +42,16 @@ class ShuttleConverters {
 
     companion object {
 
+        private const val SEPARATOR: String = ","
+
         @TypeConverter
         @JvmStatic
-        fun fromShuttle(shuttles: List<Shuttle>?): String? = shuttles?.joinToString { it.name }
+        fun fromShuttle(shuttles: List<Shuttle>?): String? = shuttles?.joinToString(SEPARATOR) { it.name }
 
         @TypeConverter
         @JvmStatic
         fun toShuttle(name: String?): List<Shuttle>? = name
-            ?.split(",")
+            ?.split(SEPARATOR)
             ?.map { Shuttle(it, "-", "-", "-", "-") }
     }
 }
