@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.android.gms.maps.model.LatLng
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.samborskii.nusbus.R
 import io.samborskii.nusbus.api.NusBusClient
@@ -55,13 +56,7 @@ class MainActivityPresentationModel @Inject constructor(
 
         refreshBusStopsAction.observable
             .skipWhileInProgress(inProgress.observable)
-            .flatMapSingle {
-                apiClient.busStops()
-                    .bindProgress(inProgress.consumer)
-                    .subscribeOn(Schedulers.io())
-                    .doOnSuccess { busStops -> busStopDao.upsert(busStops) }
-                    .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(nusBusServerErrorMessage)) }
-            }
+            .flatMapSingle { loadBusStops() }
             .retry()
             .subscribe(busStopsData.consumer)
             .untilDestroy()
@@ -70,20 +65,14 @@ class MainActivityPresentationModel @Inject constructor(
             .skipWhileInProgress(inProgress.observable)
             .doOnEach { busStopName ->
                 if (busStopName.isOnNext && busStopName.value != emptyBusStopName) {
-                    shuttleServiceDao.findByName(busStopName.value!!)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(shuttleServiceData.consumer, voidData.consumer)
+                    loadShuttleServiceLocal(busStopName.value!!)
                 }
             }
             .flatMapSingle { busStopName ->
                 if (busStopName == emptyBusStopName) {
                     Single.just(emptyShuttleService)
                 } else {
-                    apiClient.shuttleService(busStopName)
-                        .bindProgress(inProgress.consumer)
-                        .subscribeOn(Schedulers.io())
-                        .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
-                        .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
+                    loadShuttleService(busStopName)
                 }
             }
             .retry()
@@ -105,4 +94,21 @@ class MainActivityPresentationModel @Inject constructor(
 
         requestMyLocationAction.consumer.accept(Unit)
     }
+
+    private fun loadBusStops(): Single<List<BusStop>> = apiClient.busStops()
+        .bindProgress(inProgress.consumer)
+        .subscribeOn(Schedulers.io())
+        .doOnSuccess { busStops -> busStopDao.upsert(busStops) }
+        .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(nusBusServerErrorMessage)) }
+
+
+    private fun loadShuttleServiceLocal(busStopName: String): Disposable = shuttleServiceDao.findByName(busStopName)
+        .subscribeOn(Schedulers.io())
+        .subscribe(shuttleServiceData.consumer, voidData.consumer)
+
+    private fun loadShuttleService(busStopName: String): Single<ShuttleService> = apiClient.shuttleService(busStopName)
+        .bindProgress(inProgress.consumer)
+        .subscribeOn(Schedulers.io())
+        .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
+        .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
 }

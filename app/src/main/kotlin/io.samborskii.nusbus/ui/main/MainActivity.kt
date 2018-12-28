@@ -202,12 +202,10 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         }
 
         bus_stop_name.text = busStopCaption
-        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles)
+        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles ?: emptyList())
 
-        val shuttleCardHeight = minOf(
-            shuttleCardMaxHeight,
-            shuttles.size * shuttleListItemHeight + shuttles.size * shuttleListItemDividerHeight
-        )
+        val shuttleCardHeight =
+            minOf(shuttleCardMaxHeight, (shuttles?.size ?: 0) * (shuttleListItemHeight + shuttleListItemDividerHeight))
 
         heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
         topMarginToAnimator(loading, progressBarMargin, ANIMATION_DURATION).start()

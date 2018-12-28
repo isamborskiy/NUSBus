@@ -14,7 +14,7 @@ data class ShuttleServiceResponse(@JsonProperty("ShuttleServiceResult") val shut
 data class ShuttleService(
     @JsonProperty("caption") val caption: String,
     @PrimaryKey @JsonProperty("name") val name: String,
-    @JsonProperty("shuttles") val shuttles: List<Shuttle>
+    @JsonProperty("shuttles") val shuttles: List<Shuttle>?
 )
 
 private const val ARRIVING_SHUTTLE_TIME: String = "Arr"
@@ -35,7 +35,10 @@ data class Shuttle(
 
     fun isNoService(): Boolean = arrivalTime == NO_SERVICE_SHUTTLE_TIME
 
-    override fun compareTo(other: Shuttle): Int = name.compareTo(other.name)
+    override fun compareTo(other: Shuttle): Int {
+        val order = isNoService().compareTo(other.isNoService())
+        return if (order != 0) order else name.compareTo(other.name)
+    }
 }
 
 class ShuttleConverters {
@@ -52,6 +55,6 @@ class ShuttleConverters {
         @JvmStatic
         fun toShuttle(name: String?): List<Shuttle>? = name
             ?.split(SEPARATOR)
-            ?.map { Shuttle(it, "-", "-", "-", "-") }
+            ?.map { Shuttle(it, "", "", "", "") }
     }
 }

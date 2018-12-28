@@ -26,5 +26,5 @@ class NusBusClientImpl(hostUrl: String, okHttpClient: OkHttpClient, mapper: Obje
 
     override fun shuttleService(busStopName: String): Single<ShuttleService> = api.shuttleService(busStopName)
         .map { it.shuttleService }
-        .map { ShuttleService(it.caption, it.name, it.shuttles.sorted()) }
+        .map { ShuttleService(it.caption, it.name, it.shuttles?.sorted()) }
 }

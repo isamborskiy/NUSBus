@@ -71,6 +71,7 @@ dependencies {
 
     testImplementation libraries.junit
     testImplementation libraries.assertj
+    testImplementation libraries.mockwebserver
     androidTestImplementation libraries.roomTesting
     androidTestImplementation libraries.testRunner
     androidTestImplementation libraries.espresso
