@@ -10,6 +10,7 @@ import io.samborskii.nusbus.api.NusBusClient
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
 import io.samborskii.nusbus.model.dao.BusStopDao
+import io.samborskii.nusbus.model.dao.ShuttleServiceDao
 import io.samborskii.nusbus.util.LatLngZoom
 import io.samborskii.nusbus.util.requestLocationOnce
 import me.dmdev.rxpm.bindProgress
@@ -25,6 +26,7 @@ val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
 class MainActivityPresentationModel @Inject constructor(
     private val apiClient: NusBusClient,
     private val busStopDao: BusStopDao,
+    private val shuttleServiceDao: ShuttleServiceDao,
     private val context: Context
 ) : MapPresentationModel() {
 
@@ -34,6 +36,8 @@ class MainActivityPresentationModel @Inject constructor(
     val cameraPositionData = State(emptyLatLngZoom)
 
     val inProgress = State(false)
+
+    private val voidData = State<Throwable>()
 
     // commands
     val errorMessage = Command<MainActivityException>()
@@ -64,6 +68,13 @@ class MainActivityPresentationModel @Inject constructor(
 
         loadShuttleServiceAction.observable
             .skipWhileInProgress(inProgress.observable)
+            .doOnEach { busStopName ->
+                if (busStopName.isOnNext && busStopName.value != emptyBusStopName) {
+                    shuttleServiceDao.findByName(busStopName.value!!)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(shuttleServiceData.consumer, voidData.consumer)
+                }
+            }
             .flatMapSingle { busStopName ->
                 if (busStopName == emptyBusStopName) {
                     Single.just(emptyShuttleService)
@@ -71,6 +82,7 @@ class MainActivityPresentationModel @Inject constructor(
                     apiClient.shuttleService(busStopName)
                         .bindProgress(inProgress.consumer)
                         .subscribeOn(Schedulers.io())
+                        .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
                         .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
                 }
             }
