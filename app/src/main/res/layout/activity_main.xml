@@ -13,62 +13,70 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
-    <LinearLayout android:id="@+id/header_wrapper"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical">
+    <LinearLayout
+            android:id="@+id/header_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-        <LinearLayout android:id="@+id/header"
-                      android:layout_width="match_parent"
-                      android:layout_height="0dp"
-                      android:gravity="center_vertical"
-                      android:background="@android:color/white"
-                      android:orientation="horizontal"
-                      android:clickable="true"
-                      android:paddingTop="@dimen/bus_stop_header_top_padding"
-                      android:paddingLeft="@dimen/default_padding"
-                      android:paddingRight="@dimen/default_padding"
-                      android:showDividers="middle">
+        <LinearLayout
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:gravity="center_vertical"
+                android:background="@android:color/white"
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:paddingTop="@dimen/bus_stop_header_top_padding"
+                android:paddingLeft="@dimen/default_padding"
+                android:paddingRight="@dimen/default_padding"
+                android:showDividers="middle">
 
-            <ImageButton android:id="@+id/close_bus_stop"
-                         android:layout_width="wrap_content"
-                         android:layout_height="wrap_content"
-                         android:padding="@dimen/default_half_padding"
-                         android:src="?attr/homeAsUpIndicator"
-                         android:background="?attr/selectableItemBackgroundBorderless"/>
+            <ImageButton
+                    android:id="@+id/close_bus_stop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/default_half_padding"
+                    android:src="?attr/homeAsUpIndicator"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
 
-            <TextView android:id="@+id/bus_stop_name"
-                      android:layout_width="0dp"
-                      android:layout_height="wrap_content"
-                      android:layout_weight="1"
-                      android:textColor="@android:color/black"
-                      android:textSize="20sp"
-                      android:gravity="center"
-                      android:fontFamily="sans-serif"
-                      tools:text="BIZ 2"/>
+            <TextView
+                    android:id="@+id/bus_stop_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@android:color/black"
+                    android:textSize="20sp"
+                    android:gravity="center"
+                    android:fontFamily="sans-serif"
+                    tools:text="BIZ 2"/>
 
-            <ImageButton android:id="@+id/refresh_shuttle"
-                         android:layout_width="wrap_content"
-                         android:layout_height="wrap_content"
-                         android:padding="@dimen/default_half_padding"
-                         android:src="@drawable/ic_sync"
-                         android:background="?attr/selectableItemBackgroundBorderless"/>
+            <ImageButton
+                    android:id="@+id/refresh_shuttle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/default_half_padding"
+                    android:visibility="invisible"
+                    android:src="@drawable/ic_sync"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
 
         </LinearLayout>
 
-        <View android:layout_width="match_parent"
-              android:layout_height="@dimen/shadow_height"
-              android:background="@drawable/shadow"/>
+        <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/shadow_height"
+                android:background="@drawable/shadow"/>
 
     </LinearLayout>
 
-    <ProgressBar android:id="@+id/loading"
-                 style="?android:attr/progressBarStyleHorizontal"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:layout_marginTop="@dimen/default_progress_bar_margin"
-                 android:layout_below="@+id/header_wrapper"
-                 android:indeterminateOnly="true"/>
+    <ProgressBar
+            android:id="@+id/loading"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/default_progress_bar_margin"
+            android:layout_below="@+id/header_wrapper"
+            android:indeterminateOnly="true"/>
 
     <android.support.design.widget.FloatingActionButton
             android:id="@+id/my_location"
@@ -90,10 +98,17 @@
             android:layout_marginBottom="@dimen/card_bottom_margin"
             card_view:cardCornerRadius="@dimen/card_corner_radius">
 
-        <android.support.v7.widget.RecyclerView
-                android:id="@+id/shuttle_list"
+        <android.support.v4.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="match_parent">
+
+            <android.support.v7.widget.RecyclerView
+                    android:id="@+id/shuttle_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </android.support.v7.widget.CardView>
 </RelativeLayout>

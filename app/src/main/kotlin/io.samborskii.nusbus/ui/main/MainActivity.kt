@@ -50,6 +50,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     private val markers: MutableMap<String, Marker> = HashMap()
 
     private val refreshBusStopsSubject = PublishSubject.create<Unit>()
+    private val refreshShuttleServiceSubject = PublishSubject.create<Unit>()
     private val selectMarkerSubject = PublishSubject.create<String>()
     private val changeCameraPositionSubject = BehaviorSubject.create<LatLngZoom>()
 
@@ -68,6 +69,10 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         markerBitmap = loadMarkerBitmap()
 
         close_bus_stop.setOnClickListener { selectMarkerSubject.onNext(emptyBusStopName) }
+        swipe_refresh_layout.setOnRefreshListener {
+            refreshShuttleServiceSubject.onNext(Unit)
+            swipe_refresh_layout.isRefreshing = false
+        }
 
         val layoutManager = LinearLayoutManager(this)
         shuttle_list.layoutManager = layoutManager
@@ -109,13 +114,12 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         pm.inProgress.observable bindTo { loading.visibility = if (it) View.VISIBLE else View.GONE }
 
         selectMarkerSubject bindTo pm.loadShuttleServiceAction
+        refreshShuttleServiceSubject.map { pm.shuttleServiceData.value.name } bindTo pm.loadShuttleServiceAction
         refreshBusStopsSubject bindTo pm.refreshBusStopsAction
         changeCameraPositionSubject bindTo pm.changeCameraPositionAction
 
-        refresh_shuttle.clicks()
-            .map { pm.shuttleServiceData.value.name } bindTo pm.loadShuttleServiceAction.consumer
         my_location.clicks()
-            .filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.requestMyLocationAction.consumer
+            .filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.requestMyLocationAction
     }
 
     override fun providePresentationModel(): MainActivityPresentationModel =
