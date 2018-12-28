@@ -87,7 +87,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
             MY_PERMISSION_ACCESS_LOCATION -> {
                 if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                     enableGoogleMapLocation(googleMap)
-                    requestLocationOnce()
+                    changeCameraPositionSubject.onNext(requestLocationOnce())
                 } else {
                     Snackbar.make(main_layout, R.string.location_permission_is_denied, Snackbar.LENGTH_SHORT).show()
                 }
