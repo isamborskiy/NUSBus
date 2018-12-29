@@ -1,4 +1,4 @@
-# NUSBus app
+# NUSBus app [![Build Status](https://travis-ci.org/isamborskiy/NUSBus.svg?branch=master)](https://travis-ci.org/isamborskiy/NUSBus)
 Open source Android app for NUS shuttle buses. 
 
 ## App information
