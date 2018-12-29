@@ -75,4 +75,3 @@ ext.libraries = [
         testRunner         : 'com.android.support.test:runner:1.0.2',
         espresso           : 'com.android.support.test.espresso:espresso-core:3.0.2'
 ]
-
