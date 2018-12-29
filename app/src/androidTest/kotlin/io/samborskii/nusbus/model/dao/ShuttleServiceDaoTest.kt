@@ -32,7 +32,7 @@ class ShuttleServiceDaoTest : BaseDaoTest() {
             .test()
             .assertValue {
                 it.name == shuttleService.name && it.caption == shuttleService.caption
-                        && it.shuttles.zip(shuttleService.shuttles).all { (s1, s2) -> s1.name == s2.name }
+                        && it.shuttles!!.zip(shuttleService.shuttles!!).all { (s1, s2) -> s1.name == s2.name }
             }
 
         database.getShuttleServiceDao().upsert(shuttleService)
@@ -41,7 +41,7 @@ class ShuttleServiceDaoTest : BaseDaoTest() {
             .test()
             .assertValue {
                 it.name == shuttleService.name && it.caption == shuttleService.caption
-                        && it.shuttles.zip(shuttleService.shuttles).all { (s1, s2) -> s1.name == s2.name }
+                        && it.shuttles!!.zip(shuttleService.shuttles!!).all { (s1, s2) -> s1.name == s2.name }
             }
     }
 }

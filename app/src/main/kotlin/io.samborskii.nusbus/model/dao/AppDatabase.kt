@@ -7,7 +7,7 @@ import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleConverters
 import io.samborskii.nusbus.model.ShuttleService
 
-@Database(entities = [BusStop::class, ShuttleService::class], version = 1)
+@Database(entities = [BusStop::class, ShuttleService::class], version = 1, exportSchema = false)
 @TypeConverters(ShuttleConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 

@@ -33,6 +33,7 @@ def versions = [
 ext.libraries = [
         // kotlin
         kotlin             : 'org.jetbrains.kotlin:kotlin-stdlib:' + kotlin_version,
+        kotlinReflect      : 'org.jetbrains.kotlin:kotlin-reflect:' + kotlin_version,
 
         // support libraries
         appCompat          : 'com.android.support:appcompat-v7:' + versions.supportLibs,
