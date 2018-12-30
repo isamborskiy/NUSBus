@@ -20,7 +20,9 @@ import me.dmdev.rxpm.skipWhileInProgress
 import javax.inject.Inject
 
 const val emptyBusStopName: String = ""
+const val closeBusStopName: String = "close"
 val emptyShuttleService: ShuttleService = ShuttleService("", emptyBusStopName, emptyList())
+val closeShuttleService: ShuttleService = ShuttleService("", closeBusStopName, emptyList())
 
 val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
 
@@ -69,10 +71,10 @@ class MainActivityPresentationModel @Inject constructor(
                 }
             }
             .flatMapSingle { busStopName ->
-                if (busStopName == emptyBusStopName) {
-                    Single.just(emptyShuttleService)
-                } else {
-                    loadShuttleService(busStopName)
+                when (busStopName) {
+                    emptyBusStopName -> Single.just(emptyShuttleService)
+                    closeBusStopName -> Single.just(closeShuttleService)
+                    else -> loadShuttleService(busStopName)
                 }
             }
             .retry()

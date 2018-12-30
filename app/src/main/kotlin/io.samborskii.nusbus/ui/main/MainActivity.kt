@@ -90,6 +90,10 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         super.onPause()
     }
 
+    override fun onBackPressed() {
+        selectMarkerSubject.onNext(closeBusStopName)
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -192,10 +196,10 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     }
 
     private fun updateBusStopInformation(shuttleService: ShuttleService) {
-        if (shuttleService == emptyShuttleService) {
-            hideBusStopInformation()
-        } else {
-            showBusStopInformation(shuttleService)
+        when (shuttleService) {
+            emptyShuttleService -> hideBusStopInformation()
+            closeShuttleService -> tryToFinishActivity()
+            else -> showBusStopInformation(shuttleService)
         }
     }
 
@@ -236,6 +240,14 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
             }
         })
         animatorSet.start()
+    }
+
+    private fun tryToFinishActivity() {
+        if (shuttle_card.height > 0) {
+            hideBusStopInformation()
+        } else {
+            finish()
+        }
     }
 }
 
