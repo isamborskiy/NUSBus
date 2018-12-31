@@ -70,6 +70,8 @@ dependencies {
     implementation libraries.roomRuntime
     implementation libraries.roomRx
 
+    implementation libraries.jsoup
+
     testImplementation libraries.junit
     testImplementation libraries.assertj
     testImplementation libraries.mockwebserver

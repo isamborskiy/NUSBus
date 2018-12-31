@@ -68,6 +68,9 @@ ext.libraries = [
         roomCompiler       : 'android.arch.persistence.room:compiler:' + versions.room,
         roomRx             : 'android.arch.persistence.room:rxjava2:' + versions.room,
 
+        // other
+        jsoup              : 'org.jsoup:jsoup:1.11.3',
+
         // test libraries
         junit              : 'junit:junit:4.12',
         assertj            : 'org.assertj:assertj-core:3.11.1',
