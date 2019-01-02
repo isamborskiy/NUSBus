@@ -3,9 +3,11 @@ package io.samborskii.nusbus.api.converter
 import io.samborskii.nusbus.model.BusRoute
 import io.samborskii.nusbus.model.Hours
 import io.samborskii.nusbus.model.emptyHours
+import io.samborskii.nusbus.util.removeSpecification
 import okhttp3.ResponseBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.TextNode
 import retrofit2.Converter
 import retrofit2.Retrofit
 import java.io.InputStream
@@ -36,6 +38,24 @@ private const val HEADER_PREFIX: String = "Service"
 private const val HOURS_ELEMENT_ID: String = "time"
 private val HOURS_REGEX: Regex = "\\d{4}".toRegex()
 
+private val unknownBusStopsMapping: Map<String, String> = mapOf(
+    "Botanic Gardens MRT Station" to "Botanic Gardens MRT",
+    "CP 11, Biz 2" to "BIZ 2",
+    "House 15" to "PGP Hse 15",
+    "House 7" to "PGP Hse 7",
+    "IT" to "Information Technology",
+    "Kent Ridge MRT Station" to "Kent Ridge MRT",
+    "Oei Tiong Ham" to "Oei Tiong Ham Building",
+    "Opp. Kent Ridge MRT Station" to "Opp Kent Ridge MRT",
+    "Opp. UHC" to "Opp University Health Centre",
+    "Opp. University Hall" to "Opp UHall",
+    "PGP Residences" to "PGPR",
+    "UHC" to "University Health Centre",
+    "University Hall" to "UHall",
+    "Ventus" to "Ventus (Opp LT13)",
+    "Yusof Ishak House" to "YIH"
+)
+
 internal class BusRoutesResponseConverter : Converter<ResponseBody, BusRoute> {
 
     override fun convert(value: ResponseBody): BusRoute = value.use { convert(it.byteStream()) }
@@ -51,6 +71,7 @@ internal class BusRoutesResponseConverter : Converter<ResponseBody, BusRoute> {
         val headerTag = body.getElementsByTag(HEADER_TAG).first()
         val name = headerTag.text()
             .removePrefix(HEADER_PREFIX)
+            .removeSpecification()
             .trim()
 
         val hoursTag = body.getElementById(HOURS_ELEMENT_ID)
@@ -60,11 +81,13 @@ internal class BusRoutesResponseConverter : Converter<ResponseBody, BusRoute> {
             Hours(hoursList.first(), hoursList.last())
         } ?: emptyHours
 
-        val route = if (hoursTag != null) extractExpressShuttleBusRoute(hoursTag) else
-            extractRegularShuttleBusRoute(body)
+        var route = extractRegularShuttleBusRoute(body)
+        if (route.isEmpty()) route = extractExpressShuttleBusRoute(hoursTag ?: headerTag)
 
         return BusRoute(name, hours, route)
     }
+
+    private fun extractRegularShuttleBusRoute(body: Element): List<String> = body.textNodes().extractRoutes()
 
     private fun extractExpressShuttleBusRoute(hoursTag: Element): List<String> {
         var routeTag: Element? = hoursTag
@@ -73,13 +96,14 @@ internal class BusRoutesResponseConverter : Converter<ResponseBody, BusRoute> {
             routeTag
         }.toList()
             .flatMap { it.textNodes() }
-            .filter { !it.isBlank }
-            .map { it.text() }
+            .extractRoutes()
     }
 
-    private fun extractRegularShuttleBusRoute(body: Element): List<String> = body.textNodes()
-        .filter { !it.isBlank }
-        .map { it.text() }
+    private fun List<TextNode>.extractRoutes(): List<String> = map { it.text() }
+        .map { it.removeSpecification() }
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+        .map { if (it in unknownBusStopsMapping) unknownBusStopsMapping[it]!! else it }
 }
 
 class BusRouteNotFoundException : Exception()

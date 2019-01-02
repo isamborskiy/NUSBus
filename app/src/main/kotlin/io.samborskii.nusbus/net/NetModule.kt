@@ -26,5 +26,10 @@ open class NetModule {
     @Named("apiHost")
     @Singleton
     @Provides
-    open fun authHost() = API_HOST
+    open fun apiHost() = API_HOST
+
+    @Named("routeApiHost")
+    @Singleton
+    @Provides
+    open fun routeApiHost() = ROUTE_API_HOST
 }

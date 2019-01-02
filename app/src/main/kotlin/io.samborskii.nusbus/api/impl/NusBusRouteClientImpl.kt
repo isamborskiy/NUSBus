@@ -19,8 +19,5 @@ class NusBusRouteClientImpl(hostUrl: String, okHttpClient: OkHttpClient) : NusBu
         .build()
         .create(NusBusRouteApi::class.java)
 
-    override fun busRoute(busName: String): Single<BusRoute> =
-        api.busRoute(
-            busName.toLowerCase()
-        )
+    override fun busRoute(busName: String): Single<BusRoute> = api.busRoute(busName.toLowerCase())
 }

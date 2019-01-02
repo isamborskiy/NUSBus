@@ -6,6 +6,6 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface NusBusRouteApi {
-    @GET("/busroutes/{busName}.html")
+    @GET("/mobileportal/busroutes/{busName}.html")
     fun busRoute(@Path("busName") busName: String): Single<BusRoute>
 }

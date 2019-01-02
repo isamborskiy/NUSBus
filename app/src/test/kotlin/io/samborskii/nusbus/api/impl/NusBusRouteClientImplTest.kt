@@ -41,7 +41,7 @@ class NusBusRouteClientImplTest : BaseMockWebServerTest() {
     """.trimIndent()
     private val a1eRoute: BusRoute = BusRoute(
         "A1E", Hours("0730", "1000"), listOf(
-            "Kent Ridge MRT Station", "LT 27", "Opp. UHC",
+            "Kent Ridge MRT", "LT 27", "Opp University Health Centre",
             "Central Library",
             "BIZ 2",
             "PGP"
@@ -64,12 +64,12 @@ class NusBusRouteClientImplTest : BaseMockWebServerTest() {
     private val a1Route: BusRoute = BusRoute(
         "A1", emptyHours, listOf(
             "PGP",
-            "Kent Ridge MRT Station", "LT 27", "University Hall", "Opp. UHC",
-            "Yusof Ishak House", "Central Library",
+            "Kent Ridge MRT", "LT 27", "UHall", "Opp University Health Centre",
+            "YIH", "Central Library",
             "LT 13", "AS 5",
             "COM2",
             "BIZ 2",
-            "Opp. TCOMS", "House 7", "PGP"
+            "Opp. TCOMS", "PGP Hse 7", "PGP"
         )
     )
 
@@ -151,17 +151,17 @@ class NusBusRouteClientImplTest : BaseMockWebServerTest() {
     }
 
     override fun response(request: RecordedRequest): MockResponse = when {
-        request.path == "/busroutes/${a1Bus.toLowerCase()}.html" -> MockResponse()
+        request.path == "/mobileportal/busroutes/${a1Bus.toLowerCase()}.html" -> MockResponse()
             .setResponseCode(HttpURLConnection.HTTP_OK)
             .addHeader("Content-Type", "text/html; charset=UTF-8")
             .setBody(a1RouteResponse)
 
-        request.path == "/busroutes/${a1eBus.toLowerCase()}.html" -> MockResponse()
+        request.path == "/mobileportal/busroutes/${a1eBus.toLowerCase()}.html" -> MockResponse()
             .setResponseCode(HttpURLConnection.HTTP_OK)
             .addHeader("Content-Type", "text/html; charset=UTF-8")
             .setBody(a1eRouteResponse)
 
-        request.path == "/busroutes/.html" -> MockResponse()
+        request.path == "/mobileportal/busroutes/.html" -> MockResponse()
             .setResponseCode(HttpURLConnection.HTTP_FORBIDDEN)
             .addHeader("Content-Type", "text/html; charset=iso-8859-1")
             .setBody(emptyBusNameResponse)

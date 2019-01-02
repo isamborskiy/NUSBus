@@ -35,7 +35,7 @@ class BusRoutesResponseConverterTest {
     """.trimIndent()
     private val a1eRoute: BusRoute = BusRoute(
         "A1E", Hours("0730", "1000"), listOf(
-            "Kent Ridge MRT Station", "LT 27", "Opp. UHC",
+            "Kent Ridge MRT", "LT 27", "Opp University Health Centre",
             "Central Library",
             "BIZ 2",
             "PGP"
@@ -57,12 +57,12 @@ class BusRoutesResponseConverterTest {
     private val a1Route: BusRoute = BusRoute(
         "A1", emptyHours, listOf(
             "PGP",
-            "Kent Ridge MRT Station", "LT 27", "University Hall", "Opp. UHC",
-            "Yusof Ishak House", "Central Library",
+            "Kent Ridge MRT", "LT 27", "UHall", "Opp University Health Centre",
+            "YIH", "Central Library",
             "LT 13", "AS 5",
             "COM2",
             "BIZ 2",
-            "Opp. TCOMS", "House 7", "PGP"
+            "Opp. TCOMS", "PGP Hse 7", "PGP"
         )
     )
 

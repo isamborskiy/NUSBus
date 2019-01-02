@@ -47,9 +47,12 @@ android {
     }
 
     testOptions {
-        // 5) Configure JUnit 5, if necessary
         junitPlatform {
-            // Configuration goes here!
+            filters {
+                if (!project.hasProperty('runIntegrationTests')) {
+                    excludeTags 'integration'
+                }
+            }
         }
     }
 }
