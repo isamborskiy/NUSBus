@@ -8,11 +8,13 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.samborskii.nusbus.R
 import io.samborskii.nusbus.api.NusBusClient
+import io.samborskii.nusbus.api.NusBusRouteClient
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
 import io.samborskii.nusbus.model.dao.BusStopDao
 import io.samborskii.nusbus.model.dao.ShuttleServiceDao
 import io.samborskii.nusbus.util.LatLngZoom
+import io.samborskii.nusbus.util.find
 import io.samborskii.nusbus.util.requestLocationOnce
 import me.dmdev.rxpm.bindProgress
 import me.dmdev.rxpm.map.MapPresentationModel
@@ -26,8 +28,12 @@ val closeShuttleService: ShuttleService = ShuttleService("", closeBusStopName, e
 
 val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
 
+val emptyBusName: String = ""
+val emptyBusRoute: List<BusStop> = emptyList()
+
 class MainActivityPresentationModel @Inject constructor(
     private val apiClient: NusBusClient,
+    private val routeApiClient: NusBusRouteClient,
     private val busStopDao: BusStopDao,
     private val shuttleServiceDao: ShuttleServiceDao,
     private val context: Context
@@ -37,6 +43,7 @@ class MainActivityPresentationModel @Inject constructor(
     val busStopsData = State(emptyList<BusStop>())
     val shuttleServiceData = State(emptyShuttleService)
     val cameraPositionData = State(emptyLatLngZoom)
+    val busRouteData = State(emptyBusRoute)
 
     val inProgress = State(false)
 
@@ -50,6 +57,7 @@ class MainActivityPresentationModel @Inject constructor(
     val loadShuttleServiceAction = Action<String>()
     val requestMyLocationAction = Action<Unit>()
     val changeCameraPositionAction = Action<LatLngZoom>()
+    val showBusRouteData = Action<String>()
 
     private val nusBusServerErrorMessage: String = context.getString(R.string.nus_bus_server_error)
 
@@ -81,6 +89,19 @@ class MainActivityPresentationModel @Inject constructor(
             .subscribe(shuttleServiceData.consumer)
             .untilDestroy()
 
+        showBusRouteData.observable
+            .skipWhileInProgress(inProgress.observable)
+            // .doOnEach {  } //TODO: load from DB
+            .flatMapSingle { busName ->
+                when (busName) {
+                    emptyBusName -> Single.just(emptyBusRoute)
+                    else -> loadBusRoute(busName, busStopsData.value)
+                }
+            }
+            .retry()
+            .subscribe(busRouteData.consumer)
+            .untilDestroy()
+
         Observable.merge(
             changeCameraPositionAction.observable,
             requestMyLocationAction.observable.map { context.requestLocationOnce() }
@@ -103,7 +124,6 @@ class MainActivityPresentationModel @Inject constructor(
         .doOnSuccess { busStops -> busStopDao.upsert(busStops) }
         .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(nusBusServerErrorMessage)) }
 
-
     private fun loadShuttleServiceLocal(busStopName: String): Disposable = shuttleServiceDao.findByName(busStopName)
         .subscribeOn(Schedulers.io())
         .subscribe(shuttleServiceData.consumer, voidData.consumer)
@@ -113,4 +133,12 @@ class MainActivityPresentationModel @Inject constructor(
         .subscribeOn(Schedulers.io())
         .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
         .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
+
+    private fun loadBusRoute(busName: String, busStops: List<BusStop>): Single<List<BusStop>> =
+        routeApiClient.busRoute(busName)
+            .bindProgress(inProgress.consumer)
+            .subscribeOn(Schedulers.io())
+            //.doOnSuccess {  } //TODO: persist data into DB
+            .doOnError { }
+            .map { busRoute -> busRoute.route.mapNotNull { busStops.find(it) } }
 }

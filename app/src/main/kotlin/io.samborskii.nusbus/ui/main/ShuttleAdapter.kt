@@ -10,7 +10,8 @@ import io.samborskii.nusbus.model.Shuttle
 import kotlinx.android.synthetic.main.list_shuttle.view.*
 
 class ShuttleAdapter(
-    private val shuttles: MutableList<Shuttle> = arrayListOf()
+    private val shuttles: MutableList<Shuttle> = arrayListOf(),
+    private val onItemClickCallback: (String) -> Unit = {}
 ) : RecyclerView.Adapter<ShuttleViewHolder>() {
 
     fun clean() {
@@ -35,16 +36,18 @@ class ShuttleAdapter(
 
     override fun onBindViewHolder(view: ShuttleViewHolder, index: Int) {
         val last = shuttles.lastIndex == index
-        view.bind(shuttles[index], last)
+        view.bind(shuttles[index], last, onItemClickCallback)
     }
 }
 
 class ShuttleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(shuttle: Shuttle, last: Boolean) {
+    fun bind(shuttle: Shuttle, last: Boolean, onItemClickCallback: (String) -> Unit) {
         val darkGray = ResourcesCompat.getColor(itemView.resources, R.color.dark_gray, null)
         val gray = ResourcesCompat.getColor(itemView.resources, R.color.gray, null)
         val lightGray = ResourcesCompat.getColor(itemView.resources, R.color.light_gray, null)
+
+        itemView.shuttle_layout.setOnClickListener { onItemClickCallback(shuttle.name) }
 
         itemView.next_shuttle_units.visibility = View.VISIBLE
         itemView.subsequent_shuttle_units.visibility = View.VISIBLE
