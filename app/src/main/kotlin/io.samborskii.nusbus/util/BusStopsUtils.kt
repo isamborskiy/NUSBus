@@ -4,14 +4,14 @@ import io.samborskii.nusbus.model.BusStop
 
 private val whitespaceRegex: Regex = "\\s+".toRegex()
 
-fun List<BusStop>.find(busStopName: String): BusStop? {
-    var busStop = firstOrNull { it.caption == busStopName || it.name == busStopName }
-    if (busStop != null) return busStop
+fun List<BusStop>.find(busStopName: String): BusStop? = firstOrNull { it.deepEquals(busStopName) }
+
+fun BusStop.deepEquals(busStopName: String): Boolean {
+    if (caption == busStopName || name == busStopName) return true
 
     var modifiedBusStopName = busStopName.replace(whitespaceRegex, "")
-    busStop = firstOrNull { it.caption == modifiedBusStopName || it.name == modifiedBusStopName }
-    if (busStop != null) return busStop
+    if (caption == modifiedBusStopName || name == modifiedBusStopName) return true
 
     modifiedBusStopName = busStopName.replace(".", "")
-    return firstOrNull { it.caption == modifiedBusStopName || it.name == modifiedBusStopName }
+    return caption == modifiedBusStopName || name == modifiedBusStopName
 }

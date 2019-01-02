@@ -14,6 +14,7 @@ import io.samborskii.nusbus.model.ShuttleService
 import io.samborskii.nusbus.model.dao.BusStopDao
 import io.samborskii.nusbus.model.dao.ShuttleServiceDao
 import io.samborskii.nusbus.util.LatLngZoom
+import io.samborskii.nusbus.util.deepEquals
 import io.samborskii.nusbus.util.find
 import io.samborskii.nusbus.util.requestLocationOnce
 import me.dmdev.rxpm.bindProgress
@@ -95,7 +96,7 @@ class MainActivityPresentationModel @Inject constructor(
             .flatMapSingle { busName ->
                 when (busName) {
                     emptyBusName -> Single.just(emptyBusRoute)
-                    else -> loadBusRoute(busName, busStopsData.value)
+                    else -> loadBusRoute(busName, busStopsData.value, shuttleServiceData.value)
                 }
             }
             .retry()
@@ -134,11 +135,16 @@ class MainActivityPresentationModel @Inject constructor(
         .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
         .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
 
-    private fun loadBusRoute(busName: String, busStops: List<BusStop>): Single<List<BusStop>> =
+    private fun loadBusRoute(
+        busName: String,
+        busStops: List<BusStop>,
+        shuttleService: ShuttleService
+    ): Single<List<BusStop>> =
         routeApiClient.busRoute(busName)
             .bindProgress(inProgress.consumer)
             .subscribeOn(Schedulers.io())
             //.doOnSuccess {  } //TODO: persist data into DB
             .doOnError { }
             .map { busRoute -> busRoute.route.mapNotNull { busStops.find(it) } }
+            .map { busRoute -> busRoute.dropWhile { !it.deepEquals(shuttleService.name) } }
 }
