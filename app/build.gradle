@@ -2,6 +2,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'de.mannodermaus.android-junit5'
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+}
 
 android {
     compileSdkVersion 28
@@ -38,6 +45,13 @@ android {
     lintOptions {
         abortOnError false
     }
+
+    testOptions {
+        // 5) Configure JUnit 5, if necessary
+        junitPlatform {
+            // Configuration goes here!
+        }
+    }
 }
 
 dependencies {
@@ -72,10 +86,14 @@ dependencies {
 
     implementation libraries.jsoup
 
-    testImplementation libraries.junit
-    testImplementation libraries.assertj
+    testImplementation libraries.junit4
+    testImplementation libraries.junit5API
+    testRuntimeOnly libraries.junit5Engine
+    testRuntimeOnly libraries.junit5Vintage
+
     testImplementation libraries.mockwebserver
     androidTestImplementation libraries.roomTesting
+
     androidTestImplementation libraries.testRunner
     androidTestImplementation libraries.espresso
 }

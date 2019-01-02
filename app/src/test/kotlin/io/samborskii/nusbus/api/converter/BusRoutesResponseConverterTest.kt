@@ -3,8 +3,10 @@ package io.samborskii.nusbus.api.converter
 import io.samborskii.nusbus.model.BusRoute
 import io.samborskii.nusbus.model.Hours
 import io.samborskii.nusbus.model.emptyHours
-import org.assertj.core.api.Java6Assertions
-import org.junit.Test
+import org.hamcrest.core.IsEqual.equalTo
+import org.junit.Assert.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class BusRoutesResponseConverterTest {
 
@@ -107,22 +109,23 @@ class BusRoutesResponseConverterTest {
     @Test
     fun `convert bus route (regular)`() {
         val busRoute = BusRoutesResponseConverter().convert(a1RouteResponse.byteInputStream())
-        Java6Assertions.assertThat(busRoute).isEqualTo(a1Route)
+        assertThat(busRoute, equalTo(a1Route))
     }
 
     @Test
     fun `convert bus route (express)`() {
         val busRoute = BusRoutesResponseConverter().convert(a1eRouteResponse.byteInputStream())
-        Java6Assertions.assertThat(busRoute).isEqualTo(a1eRoute)
+        assertThat(busRoute, equalTo(a1eRoute))
     }
 
-    @Test(expected = BusRouteNotFoundException::class)
+    @Test
     fun `wrong bus route response`() {
-        BusRoutesResponseConverter().convert(wrongBusNameResponse.byteInputStream())
+        assertThrows<BusRouteNotFoundException> { BusRoutesResponseConverter().convert(wrongBusNameResponse.byteInputStream()) }
+
     }
 
-    @Test(expected = BusRouteNotFoundException::class)
+    @Test
     fun `empty bus route response`() {
-        BusRoutesResponseConverter().convert(emptyBusNameResponse.byteInputStream())
+        assertThrows<BusRouteNotFoundException> { BusRoutesResponseConverter().convert(emptyBusNameResponse.byteInputStream()) }
     }
 }

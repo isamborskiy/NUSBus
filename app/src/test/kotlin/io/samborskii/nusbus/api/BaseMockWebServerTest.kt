@@ -4,8 +4,8 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.After
-import org.junit.Before
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import java.net.HttpURLConnection
 
 abstract class BaseMockWebServerTest {
@@ -16,10 +16,10 @@ abstract class BaseMockWebServerTest {
         })
     }
 
-    @Before
+    @BeforeEach
     fun start() = server.start()
 
-    @After
+    @AfterEach
     fun stop() = server.shutdown()
 
     protected fun resolve(path: String): String = server.url(path).toString()

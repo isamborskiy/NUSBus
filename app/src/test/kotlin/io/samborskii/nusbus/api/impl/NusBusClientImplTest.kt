@@ -8,8 +8,8 @@ import io.samborskii.nusbus.model.*
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.net.HttpURLConnection
 
 class NusBusClientImplTest : BaseMockWebServerTest() {
@@ -43,7 +43,7 @@ class NusBusClientImplTest : BaseMockWebServerTest() {
 
     private lateinit var client: NusBusClient
 
-    @Before
+    @BeforeEach
     fun setup() {
         client = NusBusClientImpl(resolve("/"), OkHttpClient(), mapper)
     }
