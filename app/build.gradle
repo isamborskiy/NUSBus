@@ -89,6 +89,9 @@ dependencies {
 
     implementation libraries.jsoup
 
+    debugImplementation libraries.leakCanary
+    releaseImplementation libraries.leakCanaryNoOp
+
     testImplementation libraries.junit4
     testImplementation libraries.junit5API
     testRuntimeOnly libraries.junit5Engine

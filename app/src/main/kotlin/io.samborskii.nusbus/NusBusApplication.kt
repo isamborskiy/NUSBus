@@ -2,6 +2,7 @@ package io.samborskii.nusbus
 
 import android.app.Application
 import android.content.Context
+import com.squareup.leakcanary.LeakCanary
 import io.samborskii.nusbus.api.ApiModule
 import io.samborskii.nusbus.model.ModelModule
 import io.samborskii.nusbus.model.dao.DatabaseModule
@@ -18,6 +19,13 @@ class NusBusApplication : Application() {
             .databaseModule(DatabaseModule(this))
             .modelModule(ModelModule())
             .build()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        if (LeakCanary.isInAnalyzerProcess(this)) return
+        LeakCanary.install(this)
     }
 
     companion object {
