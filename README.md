@@ -8,6 +8,7 @@ Open source Android app for NUS shuttle buses.
 ## Screenshots
 [<img src="images/main_screen.jpg" width=200>](images/main_screen.jpg)
 [<img src="images/main_screen_route.jpg" width=200>](images/main_screen_route.jpg)
+[<img src="images/main_screen_offline.jpg" width=200>](images/main_screen_offline.jpg)
 
 ## How to build APK?
 1. Clone this repository
