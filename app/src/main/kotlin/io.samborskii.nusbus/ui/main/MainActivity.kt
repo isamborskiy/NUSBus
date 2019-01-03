@@ -34,11 +34,11 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     GoogleMap.OnMarkerClickListener, GoogleMap.OnMapClickListener {
 
     private var headerHeight: Int = 0
-    private var shuttleCardMinHeight: Int = 0
-    private var shuttleCardMaxHeight: Int = 0
-    private var shuttleListItemHeight: Int = 0
-    private var shuttleListItemDividerHeight: Int = 0
-    private var offlineCardHeight: Int = 0
+    private var shuttlesPanelMinHeight: Int = 0
+    private var shuttlesPanelMaxHeight: Int = 0
+    private var shuttleBusListItemHeight: Int = 0
+    private var shuttleBusListItemDividerHeight: Int = 0
+    private var onlineStatusHeight: Int = 0
 
     private var statusBarHeight: Int = 0
     private var progressBarMargin: Int = 0
@@ -58,11 +58,11 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         setContentView(R.layout.activity_main)
 
         headerHeight = resources.getDimension(R.dimen.bus_stop_header_height).toInt()
-        shuttleCardMinHeight = resources.getDimension(R.dimen.shuttles_panel_min_height).toInt()
-        shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttles_panel_max_height).toInt()
-        shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_bus_list_item_height).toInt()
-        shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_bus_list_item_divider_height).toInt()
-        offlineCardHeight = resources.getDimension(R.dimen.online_status_height).toInt()
+        shuttlesPanelMinHeight = resources.getDimension(R.dimen.shuttles_panel_min_height).toInt()
+        shuttlesPanelMaxHeight = resources.getDimension(R.dimen.shuttles_panel_max_height).toInt()
+        shuttleBusListItemHeight = resources.getDimension(R.dimen.shuttle_bus_list_item_height).toInt()
+        shuttleBusListItemDividerHeight = resources.getDimension(R.dimen.shuttle_bus_list_item_divider_height).toInt()
+        onlineStatusHeight = resources.getDimension(R.dimen.online_status_height).toInt()
 
         statusBarHeight = resources.getDimension(R.dimen.bus_stop_header_top_padding).toInt()
         progressBarMargin = resources.getDimension(R.dimen.progress_bar_margin).toInt()
@@ -81,8 +81,8 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         }
 
         val layoutManager = LinearLayoutManager(this)
-        shuttle_list.layoutManager = layoutManager
-        shuttle_list.adapter = ShuttleAdapter(onItemClickCallback = buildBusRouteSubject::onNext)
+        shuttle_buses_list.layoutManager = layoutManager
+        shuttle_buses_list.adapter = ShuttleAdapter(onItemClickCallback = buildBusRouteSubject::onNext)
     }
 
     override fun onPause() {
@@ -131,7 +131,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         changeCameraPositionSubject bindTo pm.changeCameraPositionAction
         buildBusRouteSubject bindTo pm.showBusRouteData
 
-        offline_notification.clicks() bindTo pm.refreshBusStopsAction
+        online_status.clicks() bindTo pm.refreshBusStopsAction
         my_location.clicks().filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.requestMyLocationAction
     }
 
@@ -193,7 +193,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     }
 
     private fun updateOnlineStatus(online: Boolean) =
-        heightToAnimator(offline_notification, if (online) 0 else offlineCardHeight, ANIMATION_DURATION).start()
+        heightToAnimator(online_status, if (online) 0 else onlineStatusHeight, ANIMATION_DURATION).start()
 
     private fun isPermissionGrantedAndGpsEnabled(): Boolean {
         val permissionGranted = isLocationPermissionGranted()
@@ -226,14 +226,14 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         }
 
         bus_stop_name.text = busStopCaption
-        (shuttle_list.adapter as ShuttleAdapter).updateShuttles(shuttles ?: emptyList())
+        (shuttle_buses_list.adapter as ShuttleAdapter).updateShuttles(shuttles ?: emptyList())
 
-        var shuttleCardHeight = (shuttles?.size ?: 0) * (shuttleListItemHeight + shuttleListItemDividerHeight)
-        shuttleCardHeight = shuttleCardHeight.coerceIn(shuttleCardMinHeight..shuttleCardMaxHeight)
+        var shuttleCardHeight = (shuttles?.size ?: 0) * (shuttleBusListItemHeight + shuttleBusListItemDividerHeight)
+        shuttleCardHeight = shuttleCardHeight.coerceIn(shuttlesPanelMinHeight..shuttlesPanelMaxHeight)
 
         heightToAnimator(header, headerHeight, ANIMATION_DURATION).start()
         topMarginToAnimator(loading, progressBarMargin, ANIMATION_DURATION).start()
-        heightToAnimator(shuttle_card, shuttleCardHeight, ANIMATION_DURATION).start()
+        heightToAnimator(shuttle_buses_panel, shuttleCardHeight, ANIMATION_DURATION).start()
     }
 
     private fun hideBusStopInformation() {
@@ -242,12 +242,12 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         val animatorSet = AnimatorSet()
         animatorSet.playTogether(
             heightToAnimator(header, 0, ANIMATION_DURATION),
-            heightToAnimator(shuttle_card, 0, ANIMATION_DURATION),
+            heightToAnimator(shuttle_buses_panel, 0, ANIMATION_DURATION),
             topMarginToAnimator(loading, statusBarHeight + progressBarMargin, ANIMATION_DURATION)
         )
         animatorSet.addListener(object : AnimationEndListener {
             override fun onAnimationEnd(animation: Animator?) {
-                (shuttle_list.adapter as ShuttleAdapter).clean()
+                (shuttle_buses_list.adapter as ShuttleAdapter).clean()
                 bus_stop_name.text = ""
             }
         })
@@ -255,7 +255,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     }
 
     private fun tryToFinishActivity() {
-        if (shuttle_card.height > 0) {
+        if (shuttle_buses_panel.height > 0) {
             hideBusStopInformation()
         } else {
             finish()
