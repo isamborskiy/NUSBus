@@ -9,8 +9,10 @@ import io.reactivex.schedulers.Schedulers
 import io.samborskii.nusbus.R
 import io.samborskii.nusbus.api.NusBusClient
 import io.samborskii.nusbus.api.NusBusRouteClient
+import io.samborskii.nusbus.model.BusRoute
 import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
+import io.samborskii.nusbus.model.dao.BusRouteDao
 import io.samborskii.nusbus.model.dao.BusStopDao
 import io.samborskii.nusbus.model.dao.ShuttleServiceDao
 import io.samborskii.nusbus.util.*
@@ -32,8 +34,11 @@ val emptyBusRoute: List<BusStop> = emptyList()
 class MainActivityPresentationModel @Inject constructor(
     private val apiClient: NusBusClient,
     private val routeApiClient: NusBusRouteClient,
+
     private val busStopDao: BusStopDao,
     private val shuttleServiceDao: ShuttleServiceDao,
+    private val busRouteDao: BusRouteDao,
+
     private val context: Context
 ) : MapPresentationModel() {
 
@@ -89,7 +94,11 @@ class MainActivityPresentationModel @Inject constructor(
 
         showBusRouteData.observable
             .skipWhileInProgress(inProgress.observable)
-            // .doOnEach {  } //TODO: load from DB
+            .doOnEach { busName ->
+                if (busName.isOnNext && busName.value != emptyBusName) {
+                    loadBusRouteLocal(busName.value!!, busStopsData.value, shuttleServiceData.value)
+                }
+            }
             .flatMapSingle { busName ->
                 when (busName) {
                     emptyBusName -> Single.just(emptyBusRoute)
@@ -132,6 +141,15 @@ class MainActivityPresentationModel @Inject constructor(
         .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
         .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
 
+    private fun loadBusRouteLocal(
+        busName: String,
+        busStops: List<BusStop>,
+        shuttleService: ShuttleService
+    ): Disposable = busRouteDao.findByName(busName)
+        .subscribeOn(Schedulers.io())
+        .mapToRoute(busName, busStops, shuttleService)
+        .subscribe(busRouteData.consumer, voidData.consumer)
+
     private fun loadBusRoute(
         busName: String,
         busStops: List<BusStop>,
@@ -140,9 +158,16 @@ class MainActivityPresentationModel @Inject constructor(
         routeApiClient.busRoute(busName.removeSpecification())
             .bindProgress(inProgress.consumer)
             .subscribeOn(Schedulers.io())
-            //.doOnSuccess {  } //TODO: persist data into DB
-            .doOnError { }
-            .map { busRoute -> busRoute.route.mapNotNull { busStops.find(it) } }
+            .doOnSuccess { busRouteDao.upsert(it) }
+            .doOnError { errorMessage.consumer.accept(BusRouteLoadingException(nusBusServerErrorMessage)) }
+            .mapToRoute(busName, busStops, shuttleService)
+
+    private fun Single<BusRoute>.mapToRoute(
+        busName: String,
+        busStops: List<BusStop>,
+        shuttleService: ShuttleService
+    ): Single<List<BusStop>> =
+        map { busRoute -> busRoute.route.mapNotNull { busStops.find(it) } }
             .map { busRoute -> busRoute.dropWhile { !it.deepEquals(shuttleService.name) } }
             .map { busRoute ->
                 when (busName.getSpecification()) {

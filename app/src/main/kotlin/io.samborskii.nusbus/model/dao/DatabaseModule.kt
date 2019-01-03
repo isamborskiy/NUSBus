@@ -20,4 +20,8 @@ open class DatabaseModule(application: NusBusApplication) {
     @Singleton
     @Provides
     fun shuttleServiceDao(): ShuttleServiceDao = appDatabase.getShuttleServiceDao()
+
+    @Singleton
+    @Provides
+    fun busRouteDao(): BusRouteDao = appDatabase.getBusRouteDao()
 }

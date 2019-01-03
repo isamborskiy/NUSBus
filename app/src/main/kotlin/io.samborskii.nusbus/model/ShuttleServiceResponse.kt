@@ -53,7 +53,7 @@ class ShuttleConverters {
 
         @TypeConverter
         @JvmStatic
-        fun toShuttle(name: String?): List<Shuttle>? = name
+        fun toShuttle(shuttlesStr: String?): List<Shuttle>? = shuttlesStr
             ?.split(SEPARATOR)
             ?.map { Shuttle(it, "", "", "", "") }
     }

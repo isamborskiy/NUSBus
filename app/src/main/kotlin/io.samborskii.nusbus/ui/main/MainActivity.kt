@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
@@ -180,7 +179,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         routePolyline = null
 
         val polylineOptions = PolylineOptions()
-            .color(Color.parseColor("#55000000"))
+            .color(ContextCompat.getColor(this, R.color.route))
             .addAll(route.map { it.toLatLng() })
         routePolyline = googleMap.addPolyline(polylineOptions)
     }

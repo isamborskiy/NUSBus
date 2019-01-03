@@ -18,4 +18,5 @@
     <color name="shadow_color">#1F000000</color>
 
     <color name="marker">#FF0000</color>
+    <color name="route">#55000000</color>
 </resources>
