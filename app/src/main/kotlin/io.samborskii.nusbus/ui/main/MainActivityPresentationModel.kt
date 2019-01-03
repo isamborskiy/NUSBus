@@ -13,10 +13,7 @@ import io.samborskii.nusbus.model.BusStop
 import io.samborskii.nusbus.model.ShuttleService
 import io.samborskii.nusbus.model.dao.BusStopDao
 import io.samborskii.nusbus.model.dao.ShuttleServiceDao
-import io.samborskii.nusbus.util.LatLngZoom
-import io.samborskii.nusbus.util.deepEquals
-import io.samborskii.nusbus.util.find
-import io.samborskii.nusbus.util.requestLocationOnce
+import io.samborskii.nusbus.util.*
 import me.dmdev.rxpm.bindProgress
 import me.dmdev.rxpm.map.MapPresentationModel
 import me.dmdev.rxpm.skipWhileInProgress
@@ -140,11 +137,20 @@ class MainActivityPresentationModel @Inject constructor(
         busStops: List<BusStop>,
         shuttleService: ShuttleService
     ): Single<List<BusStop>> =
-        routeApiClient.busRoute(busName)
+        routeApiClient.busRoute(busName.removeSpecification())
             .bindProgress(inProgress.consumer)
             .subscribeOn(Schedulers.io())
             //.doOnSuccess {  } //TODO: persist data into DB
             .doOnError { }
             .map { busRoute -> busRoute.route.mapNotNull { busStops.find(it) } }
             .map { busRoute -> busRoute.dropWhile { !it.deepEquals(shuttleService.name) } }
+            .map { busRoute ->
+                when (busName.getSpecification()) {
+                    // D1 on COM2 bus stop
+                    "To BIZ2" -> busRoute.drop(1).dropWhile { !it.deepEquals(shuttleService.name) }
+                    // C1 on UTown bus stop
+                    "To KRT" -> busRoute.drop(1).dropWhile { !it.deepEquals(shuttleService.name) }
+                    else -> busRoute
+                }
+            }
 }
