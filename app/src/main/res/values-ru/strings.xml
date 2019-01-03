@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="arriving">Приб</string>
+    <string name="min">мин</string>
+    <string name="no_service">Нет автобусов</string>
+
+    <string name="offline">Нет сигнала с сервером</string>
+    <string name="nus_bus_server_error">Сервер NUS не отвечает</string>
+
+    <string name="location_permission_is_denied">Доступ к местоположению отсутствует</string>
+    <string name="turn_on_device_location">Включите геолокацию на вашем устройстве</string>
+
+</resources>

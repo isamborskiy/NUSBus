@@ -1,31 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    
     <!-- General dimens -->
     <dimen name="default_padding">16dp</dimen>
     <dimen name="default_half_padding">8dp</dimen>
 
     <dimen name="shadow_height">2dp</dimen>
 
-    <!-- Maps panel dimens -->
+    <!-- Maps panels dimens -->
     <!-- status bar height -->
     <dimen name="bus_stop_header_top_padding">0dp</dimen>
     <dimen name="bus_stop_header_height">80dp</dimen>
 
-    <!-- (shuttle_list_item_height + shuttle_list_item_divider_height) * 4 -->
-    <dimen name="shuttle_card_max_height">228dp</dimen>
-    <!-- (shuttle_list_item_height + shuttle_list_item_divider_height) * 3 -->
-    <dimen name="shuttle_card_min_height">171dp</dimen>
-    <dimen name="card_corner_radius">4dp</dimen>
-    <!-- -1 * card_corner_radius -->
-    <dimen name="card_bottom_margin">-4dp</dimen>
-    <!-- ~card_corner_radius -->
-    <dimen name="card_text_bottom_padding">6dp</dimen>
-    <dimen name="shuttle_background_corner_radius">4dp</dimen>
-    <dimen name="shuttle_list_item_height">56dp</dimen>
-    <dimen name="shuttle_list_item_divider_height">1dp</dimen>
+    <dimen name="button_placeholder_size">24dp</dimen>
 
-    <dimen name="offline_card_height">32dp</dimen>
+    <dimen name="online_status_height">32dp</dimen>
+
+    <dimen name="shuttle_bus_list_item_height">56dp</dimen>
+    <dimen name="shuttle_bus_list_item_divider_height">1dp</dimen>
+
+    <!-- (shuttle_bus_list_item_height + shuttle_bus_list_item_divider_height) * 4 -->
+    <dimen name="shuttles_panel_max_height">228dp</dimen>
+    <!-- (shuttle_bus_list_item_height + shuttle_bus_list_item_divider_height) * 3 -->
+    <dimen name="shuttles_panel_min_height">171dp</dimen>
+
+    <dimen name="panels_corner_radius">4dp</dimen>
+    <!-- -1 * card_corner_radius -->
+    <dimen name="panels_bottom_margin">-4dp</dimen>
+    <!-- ~card_corner_radius -->
+    <dimen name="panels_header_text_bottom_padding">6dp</dimen>
 
     <!-- marker dimens -->
     <dimen name="marker_size">12dp</dimen>

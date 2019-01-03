@@ -2,15 +2,20 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="oval">
-            <solid android:color="@android:color/white"/>
-            <size android:width="@dimen/marker_size"
-                  android:height="@dimen/marker_size"/>
+            <solid android:color="@android:color/white" />
+            <size
+                android:width="@dimen/marker_size"
+                android:height="@dimen/marker_size" />
         </shape>
     </item>
 
-    <item android:top="1dp" android:left="1dp" android:right="1dp" android:bottom="1dp">
+    <item
+        android:bottom="1dp"
+        android:left="1dp"
+        android:right="1dp"
+        android:top="1dp">
         <shape android:shape="oval">
-            <solid android:color="@color/marker"/>
+            <solid android:color="@color/marker" />
         </shape>
     </item>
 </layer-list>

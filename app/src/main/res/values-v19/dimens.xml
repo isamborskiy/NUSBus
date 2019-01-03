@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- status bar height -->
     <dimen name="bus_stop_header_top_padding">24dp</dimen>
+
 </resources>

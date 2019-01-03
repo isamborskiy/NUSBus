@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.LinearLayoutManager
@@ -59,11 +58,11 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         setContentView(R.layout.activity_main)
 
         headerHeight = resources.getDimension(R.dimen.bus_stop_header_height).toInt()
-        shuttleCardMinHeight = resources.getDimension(R.dimen.shuttle_card_min_height).toInt()
-        shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
-        shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_list_item_height).toInt()
-        shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_list_item_divider_height).toInt()
-        offlineCardHeight = resources.getDimension(R.dimen.offline_card_height).toInt()
+        shuttleCardMinHeight = resources.getDimension(R.dimen.shuttles_panel_min_height).toInt()
+        shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttles_panel_max_height).toInt()
+        shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_bus_list_item_height).toInt()
+        shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_bus_list_item_divider_height).toInt()
+        offlineCardHeight = resources.getDimension(R.dimen.online_status_height).toInt()
 
         statusBarHeight = resources.getDimension(R.dimen.bus_stop_header_top_padding).toInt()
         progressBarMargin = resources.getDimension(R.dimen.progress_bar_margin).toInt()
@@ -106,7 +105,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
                     enableGoogleMapLocation(googleMap)
                     changeCameraPositionSubject.onNext(requestLocationOnce())
                 } else {
-                    Snackbar.make(main_layout, R.string.location_permission_is_denied, Snackbar.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.location_permission_is_denied, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -202,7 +201,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
 
         val gpsEnabled = isGpsEnabled()
         if (permissionGranted && !gpsEnabled) {
-            Snackbar.make(main_layout, R.string.turn_on_device_location, Snackbar.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.turn_on_device_location, Toast.LENGTH_SHORT).show()
         }
 
         return permissionGranted && gpsEnabled
