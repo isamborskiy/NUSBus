@@ -3,6 +3,7 @@ package io.samborskii.nusbus
 import android.app.Application
 import android.content.Context
 import io.samborskii.nusbus.api.ApiModule
+import io.samborskii.nusbus.model.ModelModule
 import io.samborskii.nusbus.model.dao.DatabaseModule
 import io.samborskii.nusbus.net.NetModule
 
@@ -15,6 +16,7 @@ class NusBusApplication : Application() {
             .netModule(NetModule())
             .apiModule(ApiModule())
             .databaseModule(DatabaseModule(this))
+            .modelModule(ModelModule())
             .build()
     }
 

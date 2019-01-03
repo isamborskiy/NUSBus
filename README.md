@@ -2,7 +2,7 @@
 Open source Android app for NUS shuttle buses. 
 
 ## App information
-* **Requires Android**: 4.1 and up
+* **Requires Android**: 5.0 and up
 * **Current versions**: 1.0
 
 ## Screenshots
