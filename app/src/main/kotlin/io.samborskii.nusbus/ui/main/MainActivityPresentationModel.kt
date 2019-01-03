@@ -28,7 +28,7 @@ val closeShuttleService: ShuttleService = ShuttleService("", closeBusStopName, e
 
 val emptyLatLngZoom: LatLngZoom = LatLngZoom(LatLng(0.0, 0.0), 0f)
 
-val emptyBusName: String = ""
+const val emptyBusName: String = ""
 val emptyBusRoute: List<BusStop> = emptyList()
 
 class MainActivityPresentationModel @Inject constructor(
@@ -47,6 +47,8 @@ class MainActivityPresentationModel @Inject constructor(
     val shuttleServiceData = State(emptyShuttleService)
     val cameraPositionData = State(emptyLatLngZoom)
     val busRouteData = State(emptyBusRoute)
+
+    val onlineStatusData = State(true)
 
     val inProgress = State(false)
 
@@ -76,11 +78,7 @@ class MainActivityPresentationModel @Inject constructor(
 
         loadShuttleServiceAction.observable
             .skipWhileInProgress(inProgress.observable)
-            .doOnEach { busStopName ->
-                if (busStopName.isOnNext && busStopName.value != emptyBusStopName) {
-                    loadShuttleServiceLocal(busStopName.value!!)
-                }
-            }
+            .doOnNext { busStopName -> if (busStopName != emptyBusStopName) loadShuttleServiceLocal(busStopName) }
             .flatMapSingle { busStopName ->
                 when (busStopName) {
                     emptyBusStopName -> Single.just(emptyShuttleService)
@@ -94,10 +92,8 @@ class MainActivityPresentationModel @Inject constructor(
 
         showBusRouteData.observable
             .skipWhileInProgress(inProgress.observable)
-            .doOnEach { busName ->
-                if (busName.isOnNext && busName.value != emptyBusName) {
-                    loadBusRouteLocal(busName.value!!, busStopsData.value, shuttleServiceData.value)
-                }
+            .doOnNext { busName ->
+                if (busName != emptyBusName) loadBusRouteLocal(busName, busStopsData.value, shuttleServiceData.value)
             }
             .flatMapSingle { busName ->
                 when (busName) {
@@ -128,8 +124,10 @@ class MainActivityPresentationModel @Inject constructor(
     private fun loadBusStops(): Single<List<BusStop>> = apiClient.busStops()
         .bindProgress(inProgress.consumer)
         .subscribeOn(Schedulers.io())
-        .doOnSuccess { busStops -> busStopDao.upsert(busStops) }
+        .doOnSuccess { busStopDao.upsert(it) }
+        .doOnSuccess { onlineStatusData.consumer.accept(true) }
         .doOnError { errorMessage.consumer.accept(BusStopsLoadingException(nusBusServerErrorMessage)) }
+        .doOnError { onlineStatusData.consumer.accept(false) }
 
     private fun loadShuttleServiceLocal(busStopName: String): Disposable = shuttleServiceDao.findByName(busStopName)
         .subscribeOn(Schedulers.io())
@@ -138,8 +136,10 @@ class MainActivityPresentationModel @Inject constructor(
     private fun loadShuttleService(busStopName: String): Single<ShuttleService> = apiClient.shuttleService(busStopName)
         .bindProgress(inProgress.consumer)
         .subscribeOn(Schedulers.io())
-        .doOnSuccess { shuttleService -> shuttleServiceDao.upsert(shuttleService) }
+        .doOnSuccess { shuttleServiceDao.upsert(it) }
+        .doOnSuccess { onlineStatusData.consumer.accept(true) }
         .doOnError { errorMessage.consumer.accept(ShuttleLoadingException(nusBusServerErrorMessage)) }
+        .doOnError { onlineStatusData.consumer.accept(false) }
 
     private fun loadBusRouteLocal(
         busName: String,
@@ -159,7 +159,9 @@ class MainActivityPresentationModel @Inject constructor(
             .bindProgress(inProgress.consumer)
             .subscribeOn(Schedulers.io())
             .doOnSuccess { busRouteDao.upsert(it) }
+            .doOnSuccess { onlineStatusData.consumer.accept(true) }
             .doOnError { errorMessage.consumer.accept(BusRouteLoadingException(nusBusServerErrorMessage)) }
+            .doOnError { onlineStatusData.consumer.accept(false) }
             .mapToRoute(busName, busStops, shuttleService)
 
     private fun Single<BusRoute>.mapToRoute(

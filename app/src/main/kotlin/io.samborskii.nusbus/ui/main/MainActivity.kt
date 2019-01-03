@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
+import android.widget.Toast
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
@@ -38,6 +39,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     private var shuttleCardMaxHeight: Int = 0
     private var shuttleListItemHeight: Int = 0
     private var shuttleListItemDividerHeight: Int = 0
+    private var offlineCardHeight: Int = 0
 
     private var statusBarHeight: Int = 0
     private var progressBarMargin: Int = 0
@@ -47,7 +49,6 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     private val markers: MutableMap<String, Marker> = HashMap()
     private var routePolyline: Polyline? = null
 
-    private val refreshBusStopsSubject = PublishSubject.create<Unit>()
     private val refreshShuttleServiceSubject = PublishSubject.create<Unit>()
     private val selectMarkerSubject = PublishSubject.create<String>()
     private val changeCameraPositionSubject = PublishSubject.create<LatLngZoom>()
@@ -62,6 +63,7 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
         shuttleCardMaxHeight = resources.getDimension(R.dimen.shuttle_card_max_height).toInt()
         shuttleListItemHeight = resources.getDimension(R.dimen.shuttle_list_item_height).toInt()
         shuttleListItemDividerHeight = resources.getDimension(R.dimen.shuttle_list_item_divider_height).toInt()
+        offlineCardHeight = resources.getDimension(R.dimen.offline_card_height).toInt()
 
         statusBarHeight = resources.getDimension(R.dimen.bus_stop_header_top_padding).toInt()
         progressBarMargin = resources.getDimension(R.dimen.progress_bar_margin).toInt()
@@ -121,17 +123,17 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
     override fun onBindPresentationModel(pm: MainActivityPresentationModel) {
         pm.shuttleServiceData.observable bindTo { updateBusStopInformation(it) }
         pm.errorMessage.observable bindTo { handleErrorMessage(it) }
+        pm.onlineStatusData.observable bindTo { updateOnlineStatus(it) }
 
         pm.inProgress.observable bindTo { loading.visibility = if (it) View.VISIBLE else View.GONE }
 
         selectMarkerSubject bindTo pm.loadShuttleServiceAction
         refreshShuttleServiceSubject.map { pm.shuttleServiceData.value.name } bindTo pm.loadShuttleServiceAction
-        refreshBusStopsSubject bindTo pm.refreshBusStopsAction
         changeCameraPositionSubject bindTo pm.changeCameraPositionAction
         buildBusRouteSubject bindTo pm.showBusRouteData
 
-        my_location.clicks()
-            .filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.requestMyLocationAction
+        offline_notification.clicks() bindTo pm.refreshBusStopsAction
+        my_location.clicks().filter { isPermissionGrantedAndGpsEnabled() } bindTo pm.requestMyLocationAction
     }
 
     override fun providePresentationModel(): MainActivityPresentationModel =
@@ -186,20 +188,13 @@ class MainActivity : MapPmSupportActivity<MainActivityPresentationModel>(),
 
     private fun handleErrorMessage(exc: MainActivityException) {
         when (exc) {
-            is ShuttleLoadingException -> {
-                selectMarkerSubject.onNext(emptyBusStopName)
-                buildBusRouteSubject.onNext(emptyBusName)
-                Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
-            }
-            is BusStopsLoadingException -> {
-                Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(R.string.retry) { refreshBusStopsSubject.onNext(Unit) }
-                    .setActionTextColor(ContextCompat.getColor(this, R.color.primary))
-                    .show()
-            }
-            else -> Snackbar.make(main_layout, exc.localizedMessage, Snackbar.LENGTH_SHORT).show()
+            is BusStopsLoadingException -> Toast.makeText(this, exc.localizedMessage, Toast.LENGTH_LONG).show()
+            else -> Toast.makeText(this, exc.localizedMessage, Toast.LENGTH_SHORT).show()
         }
     }
+
+    private fun updateOnlineStatus(online: Boolean) =
+        heightToAnimator(offline_notification, if (online) 0 else offlineCardHeight, ANIMATION_DURATION).start()
 
     private fun isPermissionGrantedAndGpsEnabled(): Boolean {
         val permissionGranted = isLocationPermissionGranted()

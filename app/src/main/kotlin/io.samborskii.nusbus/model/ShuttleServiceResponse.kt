@@ -19,6 +19,7 @@ data class ShuttleService(
 
 private const val ARRIVING_SHUTTLE_TIME: String = "Arr"
 private const val NO_SERVICE_SHUTTLE_TIME: String = "-"
+private const val CACHED_SHUTTLE_TIME: String = ""
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Shuttle(
@@ -34,6 +35,8 @@ data class Shuttle(
     fun isNextArriving(): Boolean = nextArrivalTime == ARRIVING_SHUTTLE_TIME
 
     fun isNoService(): Boolean = arrivalTime == NO_SERVICE_SHUTTLE_TIME
+
+    fun isCachedData(): Boolean = arrivalTime == CACHED_SHUTTLE_TIME
 
     override fun compareTo(other: Shuttle): Int {
         val order = isNoService().compareTo(other.isNoService())

@@ -85,10 +85,35 @@
             android:layout_height="wrap_content"
             android:src="@drawable/ic_my_location"
             android:layout_margin="@dimen/default_padding"
-            android:layout_above="@+id/shuttle_card"
+            android:layout_above="@id/offline_notification"
             android:layout_alignParentRight="true"
             android:clickable="true"
             app:backgroundTint="@android:color/white"/>
+
+    <android.support.v7.widget.CardView
+            android:id="@+id/offline_notification"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:clickable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            app:cardBackgroundColor="@color/primary"
+            android:layout_above="@id/shuttle_card"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="@dimen/card_bottom_margin"
+            card_view:cardCornerRadius="@dimen/card_corner_radius">
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:paddingBottom="@dimen/card_text_bottom_padding"
+                android:fontFamily="sans-serif"
+                android:text="@string/offline"/>
+
+    </android.support.v7.widget.CardView>
 
     <android.support.v7.widget.CardView
             android:id="@+id/shuttle_card"
@@ -112,4 +137,5 @@
         </android.support.v4.widget.SwipeRefreshLayout>
 
     </android.support.v7.widget.CardView>
+
 </RelativeLayout>

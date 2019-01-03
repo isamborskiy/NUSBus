@@ -49,35 +49,46 @@ class ShuttleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         itemView.shuttle_layout.setOnClickListener { onItemClickCallback(shuttle.name) }
 
+        itemView.next_shuttle.visibility = View.VISIBLE
         itemView.next_shuttle_units.visibility = View.VISIBLE
         itemView.subsequent_shuttle_units.visibility = View.VISIBLE
 
-        if (shuttle.isNoService()) {
+        itemView.shuttle_name.text = shuttle.name
+
+        when {
+            // shuttle was loaded from the database
+            shuttle.isCachedData() -> {
+                itemView.next_shuttle.visibility = View.GONE
+                itemView.subsequent_shuttle.visibility = View.GONE
+            }
+
             // no service of this shuttle
-            listOf(
-                itemView.shuttle_name, itemView.next_shuttle_min, itemView.next_shuttle_units,
-                itemView.subsequent_shuttle_min, itemView.subsequent_shuttle_units
-            ).forEach { it.setTextColor(lightGray) }
+            shuttle.isNoService() -> {
+                listOf(
+                    itemView.shuttle_name, itemView.next_shuttle_min, itemView.next_shuttle_units,
+                    itemView.subsequent_shuttle_min, itemView.subsequent_shuttle_units
+                ).forEach { it.setTextColor(lightGray) }
 
-            itemView.subsequent_shuttle.visibility = View.GONE
-            itemView.next_shuttle_units.visibility = View.GONE
+                itemView.subsequent_shuttle.visibility = View.GONE
+                itemView.next_shuttle_units.visibility = View.GONE
 
-            itemView.shuttle_name.text = shuttle.name
-            itemView.next_shuttle_min.text = itemView.resources.getString(R.string.no_service)
-        } else {
-            listOf(itemView.shuttle_name, itemView.next_shuttle_min, itemView.next_shuttle_units)
-                .forEach { it.setTextColor(darkGray) }
-            listOf(itemView.subsequent_shuttle_min, itemView.subsequent_shuttle_units)
-                .forEach { it.setTextColor(gray) }
+                itemView.next_shuttle_min.text = itemView.resources.getString(R.string.no_service)
+            }
 
-            itemView.subsequent_shuttle.visibility = View.VISIBLE
+            else -> {
+                listOf(itemView.shuttle_name, itemView.next_shuttle_min, itemView.next_shuttle_units)
+                    .forEach { it.setTextColor(darkGray) }
+                listOf(itemView.subsequent_shuttle_min, itemView.subsequent_shuttle_units)
+                    .forEach { it.setTextColor(gray) }
 
-            itemView.shuttle_name.text = shuttle.name
-            itemView.next_shuttle_min.text = shuttle.arrivalTime
-            itemView.subsequent_shuttle_min.text = shuttle.nextArrivalTime
+                itemView.subsequent_shuttle.visibility = View.VISIBLE
 
-            if (shuttle.isArriving()) itemView.next_shuttle_units.visibility = View.GONE
-            if (shuttle.isNextArriving()) itemView.subsequent_shuttle_units.visibility = View.GONE
+                itemView.next_shuttle_min.text = shuttle.arrivalTime
+                itemView.subsequent_shuttle_min.text = shuttle.nextArrivalTime
+
+                if (shuttle.isArriving()) itemView.next_shuttle_units.visibility = View.GONE
+                if (shuttle.isNextArriving()) itemView.subsequent_shuttle_units.visibility = View.GONE
+            }
         }
 
         val dividerVisibility = if (last) View.GONE else View.VISIBLE
